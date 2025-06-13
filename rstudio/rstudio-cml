@@ -42,11 +42,21 @@
 #
 ############################################################################
 
+export USER=cdsw
+export HOME=/home/cdsw
+export PATH=$PATH:/usr/lib/rstudio-server/bin
+
 # This saves RStudio's user runtime information to /tmp, which ensures several
 # RStudio sessions can run in the same project simultaneously
 mkdir -p /tmp/rstudio/sessions/active
 mkdir -p /home/cdsw/.rstudio/sessions
-if [ -d /home/cdsw/.rstudio/sessions/active ]; then rm -rf /home/cdsw/.rstudio/sessions/active; fi
+
+if [ -L /home/cdsw/.rstudio/sessions/active ]; then
+    rm -f /home/cdsw/.rstudio/sessions/active
+elif [ -d /home/cdsw/.rstudio/sessions/active ]; then
+    rm -rf /home/cdsw/.rstudio/sessions/active
+fi
+
 ln -s /tmp/rstudio/sessions/active /home/cdsw/.rstudio/sessions/active
 
 # This ensures RStudio picks up the environment. This may not be necessary if
@@ -57,7 +67,15 @@ ln -s /tmp/rstudio/sessions/active /home/cdsw/.rstudio/sessions/active
 env | grep -v ^LD_LIBRARY_PATH >> /usr/local/lib/R/etc/Renviron.site
 #echo "Sys.setenv(\"SPARK_DIST_CLASSPATH\"=\"${SPARK_DIST_CLASSPATH}\")" >> /usr/local/lib/R/etc/Rprofile.site
 
-echo "R_LIBS_USER=/home/cdsw/.local/lib/R/4.0/library" >> /etc/R/Renviron.site
+echo "R_LIBS_USER=/home/cdsw/.local/lib/R/4.4/library" >> /etc/R/Renviron.site
+
+# Ensure secure-cookie-key exists and is owned by the server-user
+if [ ! -f /etc/rstudio/secure-cookie-key ]; then
+    mkdir -p /etc/rstudio
+    head -c 512 /dev/urandom > /etc/rstudio/secure-cookie-key
+    chmod 0600 /etc/rstudio/secure-cookie-key
+    chown cdsw:cdsw /etc/rstudio/secure-cookie-key
+fi
 
 # Now start RStudio
 /usr/sbin/rstudio-server start --server-user cdsw
