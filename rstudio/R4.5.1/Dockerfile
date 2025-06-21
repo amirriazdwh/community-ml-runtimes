@@ -61,12 +61,23 @@ RUN test -f /tmp/docker_parts/07_rstudio_install.sh && chmod +x /tmp/docker_part
 # 08: RStudio rserver.conf configuration
 COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
 
+# Copy script into image
+COPY docker_parts/09_install_advanced_r_graphics.sh /tmp/09_install_advanced_r_graphics.sh
+RUN chmod +x /tmp/09_install_advanced_r_graphics.sh && \
+    /tmp/09_install_advanced_r_graphics.sh
+
+
 # 09: RStudio startup script
 COPY docker_parts/09_start_rstudio.sh /usr/local/bin/start_rstudio.sh
 RUN test -f /usr/local/bin/start_rstudio.sh && chmod +x /usr/local/bin/start_rstudio.sh
 
 # CML expects ml-runtime-editor entrypoint for launching RStudio
 RUN ln -s /usr/local/bin/start_rstudio.sh /usr/local/bin/ml-runtime-editor
+
+# # Copy script into image
+# COPY docker_parts/09_install_advanced_r_graphics.sh /tmp/09_install_advanced_r_graphics.sh
+# RUN chmod +x /tmp/09_install_advanced_r_graphics.sh && \
+#     /tmp/09_install_advanced_r_graphics.sh
 
 
 # ===== Final User Setup and Cleanup =====

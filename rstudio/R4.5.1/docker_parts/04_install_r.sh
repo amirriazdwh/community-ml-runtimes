@@ -1,25 +1,51 @@
 #!/bin/bash
 set -e
 
+apt-get update && apt-get install -y --no-install-recommends \
+  libx11-dev libxt-dev libxext-dev libxrender-dev \
+  libxrandr-dev libxfixes-dev libxi-dev libxinerama-dev \
+  libxkbcommon-x11-0 libxcb1-dev libxss1 \
+  libcairo2-dev libjpeg-dev libtiff5-dev libpng-dev \
+  libfontconfig1-dev libfreetype6-dev
+
+
 # Download and extract R source
 wget -q ${CRAN}/src/base/R-4/R-${R_VERSION}.tar.gz -O /tmp/R.tar.gz
 tar -xf /tmp/R.tar.gz -C /tmp
 
 # Build and install R
+# (
+#   cd /tmp/R-${R_VERSION}
+#   ./configure \
+#     --prefix=/usr/local \
+#     --enable-R-shlib \
+#     --with-blas=openblas \
+#     --with-lapack \
+#     --enable-memory-profiling \
+#     --with-x=no \
+#     CFLAGS="-g -O3 -pipe -fomit-frame-pointer" \
+#     CXXFLAGS="-g -O3 -pipe -fomit-frame-pointer"
+#   make -j"$(nproc --ignore=1)"
+#   make install
+# )
+
+# Build and install R with X11 and OpenBLAS
 (
   cd /tmp/R-${R_VERSION}
   ./configure \
     --prefix=/usr/local \
     --enable-R-shlib \
-    --with-blas=openblas \
+    --with-blas="-lopenblas" \
     --with-lapack \
     --enable-memory-profiling \
-    --with-x=no \
+    --with-x=yes \
     CFLAGS="-g -O3 -pipe -fomit-frame-pointer" \
     CXXFLAGS="-g -O3 -pipe -fomit-frame-pointer"
   make -j"$(nproc --ignore=1)"
   make install
 )
+
+
 
 # Cleanup
 rm -rf /tmp/R* /tmp/R-${R_VERSION}
