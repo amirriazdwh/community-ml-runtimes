@@ -1,0 +1,271 @@
+FROM ubuntu:22.04
+
+# ===== Environment Variables =====
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=UTC \
+    CDSW_USER=cdsw \
+    CDSW_USER_ID=8536 \
+    CDSW_GROUP_ID=8536 \
+    R_VERSION=4.5.1 \
+    RSTUDIO_VERSION=2025.05.1-513 \
+    CRAN=https://cloud.r-project.org/ \
+    R_HOME=/usr/local/lib/R \
+    R_LIBS_USER=/usr/local/lib/R/site-library \
+    R_ENABLE_JIT=3 \
+    R_COMPILE_PKGS=1 \
+    MALLOC_ARENA_MAX=2 \
+    OMP_NUM_THREADS=1 \
+    R_MAX_VSIZE=8G \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
+
+# ===== System Dependencies =====
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        tzdata locales sudo \
+        build-essential gcc g++ gfortran make \
+        libssl-dev libcurl4-openssl-dev libxml2-dev \
+        libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
+        libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev \
+        libicu-dev zlib1g-dev libbz2-dev liblzma-dev \
+        libpcre2-dev libreadline-dev libxt-dev libcairo2-dev \
+        libopenblas-dev liblapack-dev libarpack2-dev libsuitesparse-dev \
+        wget ca-certificates gdebi-core psmisc procps \
+        file git less nano \
+        libsasl2-modules-gssapi-mit krb5-user \
+        libclang-dev lsb-release && \
+    ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime && \
+    dpkg-reconfigure --frontend noninteractive tzdata && \
+    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
+    locale-gen en_US.UTF-8 && \
+    update-locale LANG=en_US.UTF-8 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# ===== Create cdsw User =====
+RUN groupadd --gid ${CDSW_GROUP_ID} ${CDSW_USER} && \
+    useradd --uid ${CDSW_USER_ID} --gid ${CDSW_GROUP_ID} --create-home --shell /bin/bash ${CDSW_USER} && \
+    echo "${CDSW_USER}:cdsw" | chpasswd && \
+    echo "${CDSW_USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# ===== Install R 4.5.1 from Source =====
+RUN wget -q ${CRAN}/src/base/R-${R_VERSION%%.*}/R-${R_VERSION}.tar.gz -O /tmp/R.tar.gz && \
+    tar -xf /tmp/R.tar.gz -C /tmp && \
+    cd /tmp/R-${R_VERSION} && \
+    ./configure \
+        --prefix=/usr/local \
+        --enable-R-shlib \
+        --with-blas=openblas \
+        --with-lapack \
+        --enable-memory-profiling \
+        --with-x=no \
+        CFLAGS="-g -O3 -pipe -fomit-frame-pointer" \
+        CXXFLAGS="-g -O3 -pipe -fomit-frame-pointer" && \
+    make -j$(nproc --ignore=1) && \
+    make install && \
+    rm -rf /tmp/R* && \
+    mkdir -p /usr/local/lib/R/site-library && \
+    echo "options(repos = c(CRAN = '${CRAN}'))" >> /usr/local/lib/R/etc/Rprofile.site && \
+    echo "R_LIBS_USER='/usr/local/lib/R/site-library'" >> /usr/local/lib/R/etc/Renviron.site && \
+    chmod -R a+w /usr/local/lib/R/site-library
+
+
+# ===== Add Global R Options =====
+RUN echo "options(\n  repos = c(CRAN = '${CRAN}'),\n  scipen = 999,\n  digits = 4,\n  width = 120,\n  tidyverse.quiet = TRUE,\n  warn = 1\n)" >> /usr/local/lib/R/etc/Rprofile.site
+
+# ===== Set R_MAX_VSIZE dynamically for all users =====
+COPY 05_set_r_memory.sh /etc/profile.d/set_r_memory.sh
+RUN chmod 755 /etc/profile.d/set_r_memory.sh
+
+# # ===== Install Banking Packages =====
+COPY 06_install-banking-packages.R /tmp/
+RUN Rscript /tmp/06_install-banking-packages.R && rm /tmp/06_install-banking-packages.R
+
+# ===== Install RStudio Server =====
+RUN wget https://download2.rstudio.org/server/jammy/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb -O /tmp/rstudio.deb && \
+    gdebi -n /tmp/rstudio.deb && \
+    rm /tmp/rstudio.deb && \
+    mkdir -p /etc/rstudio && \
+    echo "server-pid-file=/var/run/rstudio-server.pid" > /etc/rstudio/rserver.conf && \
+    echo "server-data-dir=/var/lib/rstudio-server" >> /etc/rstudio/rserver.conf && \
+    echo "rsession-which-r=/usr/local/bin/R" >> /etc/rstudio/rserver.conf && \
+    echo "www-port=8787" >> /etc/rstudio/rserver.conf && \
+    echo "server-user=cdsw" >> /etc/rstudio/rserver.conf && \
+    echo "auth-none=1" >> /etc/rstudio/rserver.conf && \
+    echo "secure-cookie-key-file=/etc/rstudio/secure-cookie-key" >> /etc/rstudio/rserver.conf && \
+    echo "www-address=0.0.0.0" >> /etc/rstudio/rserver.conf && \
+    echo "server-daemonize=0" >> /etc/rstudio/rserver.conf && \
+    mkdir -p /var/lib/rstudio-server && \
+    chmod 1777 /var/lib/rstudio-server && \
+    chown -R cdsw:cdsw /var/lib/rstudio-server
+
+
+
+# Ensure secure cookie is in place before running as cdsw
+RUN mkdir -p /etc/rstudio && \
+    head -c 512 /dev/urandom > /etc/rstudio/secure-cookie-key && \
+    chmod 0600 /etc/rstudio/secure-cookie-key && \
+    chown cdsw:cdsw /etc/rstudio/secure-cookie-key
+
+# ===== Add Resilient Startup Script =====
+RUN echo '#!/bin/bash\n\
+export USER=cdsw\n\
+export HOME=/home/cdsw\n\
+export PATH=$PATH:/usr/lib/rstudio-server/bin\n\
+# Optionally use disable_auth config\nif [ "$DISABLE_AUTH" = "true" ]; then\n  cp /etc/rstudio/disable_auth_rserver.conf /etc/rstudio/rserver.conf\nfi\n\
+# Try to start RStudio Server with fallback\nexec /usr/lib/rstudio-server/bin/rserver --server-daemonize=0 \
+  || {\n    echo "[ERROR] RStudio Server failed to start. Retrying in 5s..." >&2\n    sleep 5\n    exec /usr/lib/rstudio-server/bin/rserver --server-daemonize=0\n  }' > /usr/local/bin/start-rstudio && \
+    chmod +x /usr/local/bin/start-rstudio
+
+# ===== Add Custom RStudio Startup Script =====
+RUN echo '#!/bin/bash\n\
+export USER=cdsw\n\
+export HOME=/home/cdsw\n\
+export PATH=$PATH:/usr/lib/rstudio-server/bin\n\
+\n\
+if [ -f /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then\n\
+    CONTAINER_MEM=$(($(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)/1024/1024))\n\
+    R_MEM=$((${CONTAINER_MEM}*80/100))\n\
+    if ! grep -q "R_MAX_VSIZE=" /usr/local/lib/R/etc/Renviron.site; then\n\
+        echo "R_MAX_VSIZE=${R_MEM}M" >> /usr/local/lib/R/etc/Renviron.site\n\
+    fi\n\
+fi\n\
+\n\
+exec /usr/lib/rstudio-server/bin/rserver \\\n\
+  --server-daemonize=0 \\\n\
+  --auth-none=1 \\\n\
+  --server-user=cdsw \\\n\
+  --secure-cookie-key-file=/etc/rstudio/secure-cookie-key \\\n\
+  --www-address=0.0.0.0 \\\n\
+  --www-port=8787' > /usr/local/bin/start-rstudio && \
+    chmod +x /usr/local/bin/start-rstudio
+
+
+# ===== Final User Setup and Cleanup =====
+RUN mkdir -p /home/${CDSW_USER}/.rstudio/monitored/user-settings && \
+    echo "alwaysSaveHistory=0" > /home/${CDSW_USER}/.rstudio/monitored/user-settings/user-settings && \
+    chown -R ${CDSW_USER}:${CDSW_USER} /home/${CDSW_USER} /usr/local/lib/R
+
+
+# ============================
+# === Advanced R Features ===
+# ============================
+# X11 and Cairo Support for Advanced Plotting (R devices like X11, Cairo, etc.)
+USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        xorg libx11-dev libxt-dev libxext-dev libxrender-dev \
+        libcairo2-dev libjpeg-dev libtiff5-dev libgif-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Cairo R package (system dependencies already installed above)
+RUN Rscript -e "if (!require('Cairo')) install.packages('Cairo', repos='${CRAN}')"
+# Optional: Install additional graphics-related packages
+RUN Rscript -e "install.packages(c('ggplot2', 'gridExtra', 'gridBase'), repos='${CRAN}')"
+# Optional: Install R devices for SVG and TikZ output
+RUN Rscript -e "install.packages(c('svglite', 'tikzDevice'), repos='${CRAN}')"
+# Enable R to fallback to PDF when no X11 is available (already working, but can be reinforced)
+RUN echo '\noptions(bitmapType="cairo")' >> /usr/local/lib/R/etc/Rprofile.site
+
+# ============================
+# === End Advanced Features ==
+# ============================
+
+# ================================
+# === R Reporting & PDF Tools ===
+# ================================
+# PDF & Reporting Tools
+RUN Rscript -e "install.packages(c( \
+  'rmarkdown', 'knitr', 'bookdown', 'flexdashboard', 'officer', 'flextable', \
+  'tinytex', 'kableExtra', 'pagedown', 'gt', 'rmdformats', 'webshot', \
+  'xml2', 'rsvg', 'ggplot2', 'patchwork'), repos='${CRAN}')" && \
+  Rscript -e "webshot::install_phantomjs()" && \
+  Rscript -e "tinytex::install_tinytex()"
+
+# Optional: Install Quarto
+RUN wget https://quarto.org/download/latest/quarto-linux-amd64.deb -O /tmp/quarto.deb && \
+    gdebi -n /tmp/quarto.deb && rm /tmp/quarto.deb
+# ================================
+# === R Reporting & PDF Tools ===
+# ================================
+
+# ================================
+# === Professional R Features ===
+# ================================
+
+# System dependencies for DBI, image processing, Arrow, ODBC, etc.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    libmariadb-dev \
+    unixodbc-dev \
+    libmagick++-dev \
+    libssl-dev \
+    libcurl4-openssl-dev \
+    libxml2-dev \
+    libglpk-dev \
+    libgmp-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install advanced data, reporting, and DB packages
+RUN Rscript -e "options(repos = c(CRAN = '${CRAN}')); install.packages(c( \
+  'data.table', 'arrow', 'doParallel', 'foreach', 'future', \
+  'RPostgres', 'RMariaDB', 'odbc', 'DBI', 'bigrquery', \
+  'magick', 'glue', 'fs', 'janitor', 'readxl', 'writexl', 'openxlsx', \
+  'lubridate', 'zoo', 'xts', 'tsibble', 'forecast', \
+  'httr', 'jsonlite', 'xml2', 'rvest', \
+  'renv', 'here', 'config' ))"
+
+# Optional: install Bioconductor manager
+RUN Rscript -e "if (!requireNamespace('BiocManager', quietly=TRUE)) install.packages('BiocManager')"
+
+# ================================
+# === End Professional Features ==
+# ================================
+
+RUN apt-get update && apt-get install -y fonts-firacode
+
+
+# # Pre-configure RStudio GUI for cdsw user
+# RUN mkdir -p /home/cdsw/.config/rstudio && \
+#     echo '{ \
+#       "font_size_points": 9, \
+#       "font": "Fira Code", \
+#       "ui_theme": "Modern", \
+#       "editor_theme": "Tomorrow Night Bright", \
+#       "show_line_numbers": true, \
+#       "highlight_selected_line": true, \
+#       "soft_wrap_r_files": false, \
+#       "save_workspace": "never", \
+#       "load_workspace": false \
+#     }' > /home/cdsw/.config/rstudio/rstudio-prefs.json && \
+#     chown -R cdsw:cdsw /home/cdsw/.config
+
+# Pre-configure RStudio GUI for cdsw user
+RUN mkdir -p /home/cdsw/.config/rstudio && \
+    echo '{ \
+      "font_size_points": 9, \
+      "font": "Fira Code", \
+      "ui_theme": "Modern", \
+      "editor_theme": "Tomorrow Night Bright", \
+      "show_line_numbers": true, \
+      "highlight_selected_line": true, \
+      "soft_wrap_r_files": false, \
+      "save_workspace": "never", \
+      "load_workspace": false, \
+      "scroll_past_end": true, \
+      "show_margin": true, \
+      "margin_column": 120, \
+      "enable_code_completion": true, \
+      "show_hidden_files": false \
+    }' > /home/cdsw/.config/rstudio/rstudio-prefs.json && \
+    chown -R cdsw:cdsw /home/cdsw/.config
+
+
+# ===== Container Launch Config =====
+EXPOSE 8787
+WORKDIR /home/${CDSW_USER}
+USER ${CDSW_USER}
+CMD ["/usr/local/bin/start-rstudio"]
+
+
+
+

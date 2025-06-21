@@ -1,0 +1,21 @@
+#!/bin/bash
+
+export USER=cdsw
+export HOME=/home/cdsw
+export PATH=$PATH:/usr/lib/rstudio-server/bin
+
+# Dynamically adjust R_MAX_VSIZE based on container memory
+if [ -f /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+  CONTAINER_MEM=$(($(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)/1024/1024))
+  R_MEM=$((${CONTAINER_MEM}*80/100))
+  if ! grep -q "R_MAX_VSIZE=" /usr/local/lib/R/etc/Renviron.site; then
+    echo "R_MAX_VSIZE=${R_MEM}M" >> /usr/local/lib/R/etc/Renviron.site
+  fi
+fi
+
+# Fallback launch logic if RStudio server fails
+exec /usr/lib/rstudio-server/bin/rserver --server-daemonize=0 || {
+  echo "[ERROR] RStudio Server failed to start. Retrying in 5s..." >&2
+  sleep 5
+  exec /usr/lib/rstudio-server/bin/rserver --server-daemonize=0
+}
