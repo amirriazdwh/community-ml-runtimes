@@ -69,11 +69,16 @@ RUN test -f /usr/local/bin/start_rstudio.sh && chmod +x /usr/local/bin/start_rst
 RUN ln -s /usr/local/bin/start_rstudio.sh /usr/local/bin/ml-runtime-editor
 
 
+# ===== Final User Setup and Cleanup =====
+RUN set -e && \
+    mkdir -p /home/${CDSW_USER}/.rstudio/monitored/user-settings && \
+    echo "alwaysSaveHistory=0" > /home/${CDSW_USER}/.rstudio/monitored/user-settings/user-settings && \
+    chown -R ${CDSW_USER_ID}:${CDSW_GROUP_ID} /home/${CDSW_USER} /usr/local/lib/R
+
 # Final cleanup to reduce image size
 RUN rm -rf /tmp/docker_parts \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
-
 
 ENV ML_RUNTIME_METADATA_VERSION=2 \
     ML_RUNTIME_EDITOR="RStudio" \
