@@ -31,6 +31,33 @@ echo "session required pam_limits.so" >> /etc/pam.d/common-session
 strip /usr/lib/rstudio-server/bin/rserver /usr/lib/rstudio-server/bin/rsession || true
 rm -rf /usr/lib/rstudio-server/www/help
 
+# Advanced R Features
+# X11 and Cairo Support for Advanced Plotting (R devices like X11, Cairo, etc.)
+apt-get update && \
+    apt-get install -y --no-install-recommends \
+        xorg libx11-dev libxt-dev libxext-dev libxrender-dev \
+        libcairo2-dev libjpeg-dev libtiff5-dev libgif-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Cairo R package
+Rscript -e "if (!require('Cairo')) install.packages('Cairo', repos='${CRAN}')"
+
+# Optional: Install additional graphics-related packages
+Rscript -e "install.packages(c('ggplot2', 'gridExtra', 'gridBase'), repos='${CRAN}')"
+Rscript -e "install.packages(c('svglite', 'tikzDevice'), repos='${CRAN}')"
+
+# Ensure Cairo fallback
+echo '' >> /usr/local/lib/R/etc/Rprofile.site
+echo 'options(bitmapType="cairo")' >> /usr/local/lib/R/etc/Rprofile.site
+
+# R Reporting & PDF Tools
+Rscript -e "install.packages(c( \
+  'rmarkdown', 'knitr', 'bookdown', 'flexdashboard', 'officer', 'flextable', \
+  'tinytex', 'kableExtra', 'pagedown', 'gt', 'rmdformats', 'webshot', \
+  'xml2', 'rsvg', 'ggplot2', 'patchwork'), repos='${CRAN}')"
+Rscript -e "webshot::install_phantomjs()"
+Rscript -e "tinytex::install_tinytex()"
+
 # Cleanup cache and temp files
 rm -rf /tmp/* /var/tmp/* /root/.cache /home/cdsw/.cache /var/lib/apt/lists/*
 
