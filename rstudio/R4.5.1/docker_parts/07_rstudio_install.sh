@@ -31,37 +31,65 @@ echo "session required pam_limits.so" >> /etc/pam.d/common-session
 strip /usr/lib/rstudio-server/bin/rserver /usr/lib/rstudio-server/bin/rsession || true
 rm -rf /usr/lib/rstudio-server/www/help
 
-# Advanced R Features
-# X11 and Cairo Support for Advanced Plotting (R devices like X11, Cairo, etc.)
+# ============================
+# === Advanced R Features ===
+# ============================
+
+echo "🔧 Installing system dependencies for advanced R graphics..."
+
+# Install core X11 and graphics libraries with xvfb for headless R
 apt-get update && \
     apt-get install -y --no-install-recommends \
-        xorg libx11-dev libxt-dev libxext-dev libxrender-dev \
-        libcairo2-dev libjpeg-dev libtiff5-dev libgif-dev && \
+        xorg xvfb \
+        libx11-dev libxt-dev libxext-dev libxrender-dev \
+        libxrandr-dev libxfixes-dev libxi-dev libxinerama-dev \
+        libxkbcommon-x11-0 libxcb1-dev libxss1 \
+        libcairo2-dev libjpeg-dev libtiff5-dev libgif-dev \
+        libfontconfig1-dev libfreetype6-dev libpng-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Cairo R package
-Rscript -e "if (!require('Cairo')) install.packages('Cairo', repos='${CRAN}')"
+# Install LaTeX toolchain for tikzDevice
+echo "📦 Installing LaTeX stack for tikzDevice..."
+apt-get update && \
+    apt-get install -y --no-install-recommends \
+        texlive texlive-latex-base texlive-latex-extra \
+        texlive-fonts-recommended texlive-pictures texinfo ghostscript && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Optional: Install additional graphics-related packages
-Rscript -e "install.packages(c('ggplot2', 'gridExtra', 'gridBase'), repos='${CRAN}')"
-Rscript -e "install.packages(c('svglite', 'tikzDevice'), repos='${CRAN}')"
+# Install R graphics-related packages
+echo "📦 Installing R graphics packages..."
+Rscript -e "install.packages(c('Cairo', 'ggplot2', 'gridExtra', 'gridBase'), repos=Sys.getenv('CRAN'), quiet=TRUE)"
+Rscript -e "install.packages(c('svglite', 'tikzDevice'), repos=Sys.getenv('CRAN'), quiet=TRUE)"
 
-# Ensure Cairo fallback
-echo '' >> /usr/local/lib/R/etc/Rprofile.site
-echo 'options(bitmapType="cairo")' >> /usr/local/lib/R/etc/Rprofile.site
+# Set bitmapType to 'cairo'
+echo "options(bitmapType='cairo')" >> /usr/local/lib/R/etc/Rprofile.site
 
-# R Reporting & PDF Tools
+# Explicitly launch Xvfb background server for headless X11
+cat <<'EOF' > /etc/profile.d/x11.sh
+#!/bin/bash
+if command -v Xvfb >/dev/null; then
+  Xvfb :99 -screen 0 1024x768x16 &>/dev/null &
+  export DISPLAY=:99
+fi
+EOF
+chmod +x /etc/profile.d/x11.sh
+
+# ================================
+# === R Reporting & PDF Tools ===
+# ================================
 Rscript -e "install.packages(c( \
   'rmarkdown', 'knitr', 'bookdown', 'flexdashboard', 'officer', 'flextable', \
   'tinytex', 'kableExtra', 'pagedown', 'gt', 'rmdformats', 'webshot', \
-  'xml2', 'rsvg', 'ggplot2', 'patchwork'), repos='${CRAN}')"
+  'xml2', 'rsvg', 'patchwork'), repos=Sys.getenv('CRAN'), quiet=TRUE)"
 Rscript -e "webshot::install_phantomjs()"
-Rscript -e "tinytex::install_tinytex()"
+Rscript -e "tinytex::install_tinytex(force = TRUE)"
 
 # Cleanup cache and temp files
 rm -rf /tmp/* /var/tmp/* /root/.cache /home/cdsw/.cache /var/lib/apt/lists/*
 
-# Pre-configure GUI for cdsw user
+# ===============================
+# === GUI Preferences for cdsw ==
+# ===============================
 mkdir -p /home/cdsw/.config/rstudio && \
   cat <<PREFS > /home/cdsw/.config/rstudio/rstudio-prefs.json
 {

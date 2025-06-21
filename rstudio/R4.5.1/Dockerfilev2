@@ -170,23 +170,6 @@ RUN echo '\noptions(bitmapType="cairo")' >> /usr/local/lib/R/etc/Rprofile.site
 # === End Advanced Features ==
 # ============================
 
-# ================================
-# === R Reporting & PDF Tools ===
-# ================================
-# PDF & Reporting Tools
-RUN Rscript -e "install.packages(c( \
-  'rmarkdown', 'knitr', 'bookdown', 'flexdashboard', 'officer', 'flextable', \
-  'tinytex', 'kableExtra', 'pagedown', 'gt', 'rmdformats', 'webshot', \
-  'xml2', 'rsvg', 'ggplot2', 'patchwork'), repos='${CRAN}')" && \
-  Rscript -e "webshot::install_phantomjs()" && \
-  Rscript -e "tinytex::install_tinytex()"
-
-# Optional: Install Quarto
-RUN wget https://quarto.org/download/latest/quarto-linux-amd64.deb -O /tmp/quarto.deb && \
-    gdebi -n /tmp/quarto.deb && rm /tmp/quarto.deb
-# ================================
-# === R Reporting & PDF Tools ===
-# ================================
 
 # ================================
 # === Professional R Features ===
@@ -221,43 +204,6 @@ RUN Rscript -e "if (!requireNamespace('BiocManager', quietly=TRUE)) install.pack
 # === End Professional Features ==
 # ================================
 
-RUN apt-get update && apt-get install -y fonts-firacode
-
-
-# # Pre-configure RStudio GUI for cdsw user
-# RUN mkdir -p /home/cdsw/.config/rstudio && \
-#     echo '{ \
-#       "font_size_points": 9, \
-#       "font": "Fira Code", \
-#       "ui_theme": "Modern", \
-#       "editor_theme": "Tomorrow Night Bright", \
-#       "show_line_numbers": true, \
-#       "highlight_selected_line": true, \
-#       "soft_wrap_r_files": false, \
-#       "save_workspace": "never", \
-#       "load_workspace": false \
-#     }' > /home/cdsw/.config/rstudio/rstudio-prefs.json && \
-#     chown -R cdsw:cdsw /home/cdsw/.config
-
-# Pre-configure RStudio GUI for cdsw user
-RUN mkdir -p /home/cdsw/.config/rstudio && \
-    echo '{ \
-      "font_size_points": 9, \
-      "font": "Fira Code", \
-      "ui_theme": "Modern", \
-      "editor_theme": "Tomorrow Night Bright", \
-      "show_line_numbers": true, \
-      "highlight_selected_line": true, \
-      "soft_wrap_r_files": false, \
-      "save_workspace": "never", \
-      "load_workspace": false, \
-      "scroll_past_end": true, \
-      "show_margin": true, \
-      "margin_column": 120, \
-      "enable_code_completion": true, \
-      "show_hidden_files": false \
-    }' > /home/cdsw/.config/rstudio/rstudio-prefs.json && \
-    chown -R cdsw:cdsw /home/cdsw/.config
 
 
 # ===== Container Launch Config =====
