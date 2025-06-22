@@ -62,9 +62,9 @@ RUN test -f /tmp/docker_parts/07_rstudio_install.sh && chmod +x /tmp/docker_part
 COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
 
 # Copy script into image
-COPY docker_parts/09_install_advanced_r_graphics.sh /tmp/09_install_advanced_r_graphics.sh
-RUN chmod +x /tmp/09_install_advanced_r_graphics.sh && \
-    /tmp/09_install_advanced_r_graphics.sh
+# COPY docker_parts/09_install_advanced_r_graphics.sh /tmp/09_install_advanced_r_graphics.sh
+# RUN chmod +x /tmp/09_install_advanced_r_graphics.sh && \
+#     /tmp/09_install_advanced_r_graphics.sh
 
 
 # 09: RStudio startup script
@@ -86,10 +86,10 @@ RUN set -e && \
     echo "alwaysSaveHistory=0" > /home/${CDSW_USER}/.rstudio/monitored/user-settings/user-settings && \
     chown -R ${CDSW_USER_ID}:${CDSW_GROUP_ID} /home/${CDSW_USER} /usr/local/lib/R
 
-# Final cleanup to reduce image size
-RUN rm -rf /tmp/docker_parts \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+# # Final cleanup to reduce image size
+# RUN rm -rf /tmp/docker_parts \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
 
 ENV ML_RUNTIME_METADATA_VERSION=2 \
     ML_RUNTIME_EDITOR="RStudio" \
