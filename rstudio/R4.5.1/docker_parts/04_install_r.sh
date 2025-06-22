@@ -109,8 +109,9 @@ chown -R cdsw:cdsw /usr/local/lib/R/site-library
 ###############################################################################
 # 📦 Install Essential Graphics R Packages (no X11 required)
 ###############################################################################
+echo "📦 Installing R graphics packages..."
+Rscript -e "install.packages(c('Cairo', 'svglite', 'ragg', 'ggplot2', 'gridExtra', 'gridBase', 'tikzDevice'), repos=Sys.getenv('CRAN'), quiet=TRUE)"
 
-Rscript -e "install.packages(c('Cairo', 'svglite', 'ragg', 'ggplot2', 'gridExtra'), repos='${CRAN}', quiet = TRUE)"
 
 echo "✅ R ${R_VERSION} installation complete with headless graphics and LaTeX."
 

@@ -31,48 +31,15 @@ echo "session required pam_limits.so" >> /etc/pam.d/common-session
 strip /usr/lib/rstudio-server/bin/rserver /usr/lib/rstudio-server/bin/rsession || true
 rm -rf /usr/lib/rstudio-server/www/help
 
-# ============================
-# === Advanced R Features ===
-# ============================
-
-echo "🔧 Installing system dependencies for advanced R graphics..."
-
-# Install core X11 and graphics libraries with xvfb for headless R
-apt-get update && \
-    apt-get install -y --no-install-recommends \
-        xorg xvfb \
-        libx11-dev libxt-dev libxext-dev libxrender-dev \
-        libxrandr-dev libxfixes-dev libxi-dev libxinerama-dev \
-        libxkbcommon-x11-0 libxcb1-dev libxss1 \
-        libcairo2-dev libjpeg-dev libtiff5-dev libgif-dev \
-        libfontconfig1-dev libfreetype6-dev libpng-dev && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install LaTeX toolchain for tikzDevice
+# ===========================================
+# === LaTeX Toolchain for tikzDevice + PDF ==
+# ===========================================
 echo "📦 Installing LaTeX stack for tikzDevice..."
 apt-get update && \
     apt-get install -y --no-install-recommends \
-        texlive texlive-latex-base texlive-latex-extra \
+        texlive texlive-latex-base texlive-latex-extra libgif-dev \
         texlive-fonts-recommended texlive-pictures texinfo ghostscript && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install R graphics-related packages
-echo "📦 Installing R graphics packages..."
-Rscript -e "install.packages(c('Cairo', 'ggplot2', 'gridExtra', 'gridBase'), repos=Sys.getenv('CRAN'), quiet=TRUE)"
-Rscript -e "install.packages(c('svglite', 'tikzDevice'), repos=Sys.getenv('CRAN'), quiet=TRUE)"
-
-# Set bitmapType to 'cairo'
-echo "options(bitmapType='cairo')" >> /usr/local/lib/R/etc/Rprofile.site
-
-# Explicitly launch Xvfb background server for headless X11
-cat <<'EOF' > /etc/profile.d/x11.sh
-#!/bin/bash
-if command -v Xvfb >/dev/null; then
-  Xvfb :99 -screen 0 1024x768x16 &>/dev/null &
-  export DISPLAY=:99
-fi
-EOF
-chmod +x /etc/profile.d/x11.sh
 
 # ================================
 # === R Reporting & PDF Tools ===
@@ -84,6 +51,8 @@ Rscript -e "install.packages(c( \
 Rscript -e "webshot::install_phantomjs()"
 Rscript -e "tinytex::install_tinytex(force = TRUE)"
 
+# Set bitmapType to 'cairo'
+echo "options(bitmapType='cairo')" >> /usr/local/lib/R/etc/Rprofile.site
 # Cleanup cache and temp files
 rm -rf /tmp/* /var/tmp/* /root/.cache /home/cdsw/.cache /var/lib/apt/lists/*
 
