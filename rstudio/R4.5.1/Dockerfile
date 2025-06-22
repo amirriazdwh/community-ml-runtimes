@@ -66,6 +66,9 @@ COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
 # RUN chmod +x /tmp/09_install_advanced_r_graphics.sh && \
 #     /tmp/09_install_advanced_r_graphics.sh
 
+# USER root
+# COPY docker_parts/xvfb_startup.sh /usr/local/bin/xvfb_startup.sh
+# RUN chmod +x /usr/local/bin/xvfb_startup.sh
 
 # 09: RStudio startup script
 COPY docker_parts/09_start_rstudio.sh /usr/local/bin/start_rstudio.sh
@@ -87,9 +90,9 @@ RUN set -e && \
     chown -R ${CDSW_USER_ID}:${CDSW_GROUP_ID} /home/${CDSW_USER} /usr/local/lib/R
 
 # # Final cleanup to reduce image size
-# RUN rm -rf /tmp/docker_parts \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+RUN rm -rf /tmp/docker_parts \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
 
 ENV ML_RUNTIME_METADATA_VERSION=2 \
     ML_RUNTIME_EDITOR="RStudio" \

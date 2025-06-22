@@ -1,30 +1,52 @@
 #!/bin/bash
 set -e
+###############################################################################
+# 🛠️ Build and Install R from Source (Graphics + LaTeX, X11-Free)
+###############################################################################
 
-echo "🔧 Installing system dependencies for R with full graphics and LaTeX support..."
+# 🌐 Default environment variables (safe fallback)
+: "${R_VERSION:=4.5.1}"
+: "${CRAN:=https://cran.rstudio.com}"
 
-# Core graphics, math, and font libraries
+echo "🔧 Installing system dependencies for R ${R_VERSION} with graphics and LaTeX support (no X11)..."
+
+###############################################################################
+# 📦 R INSTALLATION DEPENDENCIES
+###############################################################################
+
+# 🖼️ Stage 3: Graphics, fonts, and SVG support (headless, no X11)
 apt-get update && apt-get install -y --no-install-recommends \
-  libx11-dev libxt-dev libxext-dev libxrender-dev \
-  libxrandr-dev libxfixes-dev libxi-dev libxinerama-dev \
-  libxkbcommon-x11-0 libxcb1-dev libxss1 \
-  libcairo2-dev libjpeg-dev libtiff5-dev libpng-dev \
-  libfontconfig1-dev libfreetype6-dev librsvg2-dev \
-  x11proto-core-dev xauth pkg-config libxrender1 \
-  texlive texlive-latex-base texlive-latex-extra \
-  texlive-fonts-recommended texlive-pictures \
-  texinfo ghostscript \
-  libopenblas-dev && \
-apt-get clean && rm -rf /var/lib/apt/lists/*
+    libcairo2-dev libjpeg-dev libtiff5-dev libpng-dev \
+    libfontconfig1-dev libfreetype6-dev librsvg2-dev \
+    libharfbuzz-dev libfribidi-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# 📚 Stage 4: LaTeX and PDF rendering toolchain (for R Markdown, Quarto)
+apt-get update && apt-get install -y --no-install-recommends \
+    texlive texlive-latex-base texlive-latex-extra \
+    texlive-fonts-recommended texlive-pictures \
+    texinfo ghostscript \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# 🔢 Stage 5: Math, compression, and scientific computing
+apt-get update && apt-get install -y --no-install-recommends \
+    libopenblas-dev liblapack-dev libarpack2-dev libsuitesparse-dev \
+    libicu-dev zlib1g-dev libbz2-dev liblzma-dev libpcre2-dev \
+    libreadline-dev libxt-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+###############################################################################
+# 📥 Download, Build, and Install R
+###############################################################################
 
 echo "📦 Downloading R ${R_VERSION} from CRAN..."
 wget -q "${CRAN}/src/base/R-4/R-${R_VERSION}.tar.gz" -O /tmp/R.tar.gz
 tar -xf /tmp/R.tar.gz -C /tmp
 
-echo "🛠️  Building and installing R ${R_VERSION}..."
+echo "🛠️  Building R ${R_VERSION} from source..."
 (
   cd /tmp/R-${R_VERSION}
+
   ./configure \
     --prefix=/usr/local \
     --enable-R-shlib \
@@ -32,21 +54,16 @@ echo "🛠️  Building and installing R ${R_VERSION}..."
     --with-blas="-lopenblas" \
     --with-lapack \
     --enable-memory-profiling \
-    --with-x=yes \
+    --without-x \
     --with-cairo \
     CFLAGS="-g -O3 -pipe -fomit-frame-pointer" \
-    CXXFLAGS="-g -O3 -pipe -fomit-frame-pointer" \
-    LIBS="-lX11 -lXrender"
-
-  echo "🔍 Cairo and X11 config.log diagnostics:"
-  grep -A5 'cairo' config.log || true
-  grep -A5 'Xlib' config.log || true
+    CXXFLAGS="-g -O3 -pipe -fomit-frame-pointer"
 
   make -j"$(nproc --ignore=1)"
   make install
 )
 
-# Save config.log for troubleshooting
+# Save config.log for debugging
 if [ -f /tmp/R-${R_VERSION}/config.log ]; then
   cp /tmp/R-${R_VERSION}/config.log /var/log/R-${R_VERSION}-config.log
   echo "✅ Copied config.log to /var/log"
@@ -54,14 +71,16 @@ else
   echo "⚠️ config.log not found!"
 fi
 
-echo "🧹 Cleaning up build files..."
+# Clean build files
 rm -rf /tmp/R* /tmp/R-${R_VERSION}
 
-echo "📁 Setting up R library path..."
+###############################################################################
+# ⚙️ R Configuration
+###############################################################################
+
 mkdir -p /usr/local/lib/R/site-library
 chmod -R a+w /usr/local/lib/R/site-library
 
-echo "⚙️ Writing Rprofile.site options..."
 cat <<EOF > /usr/local/lib/R/etc/Rprofile.site
 options(
   repos = c(CRAN = '${CRAN}'),
@@ -74,7 +93,6 @@ options(
 bitmapType = "cairo"
 EOF
 
-echo "⚙️ Writing Renviron.site environment settings..."
 cat <<EOF > /usr/local/lib/R/etc/Renviron.site
 R_VERSION='${R_VERSION}'
 R_ENABLE_JIT=3
@@ -83,12 +101,24 @@ R_LIBS_USER='/usr/local/lib/R/site-library'
 PATH=\${PATH}:/usr/local/lib/R/bin
 EOF
 
-echo "👤 Adjusting permissions for cdsw user..."
+# Ensure correct ownership for cdsw user (must exist)
 chown cdsw:cdsw /usr/local/lib/R/etc/Renviron.site
 chown cdsw:cdsw /usr/local/lib/R/etc/Rprofile.site
 chown -R cdsw:cdsw /usr/local/lib/R/site-library
 
-echo "📦 Installing core graphics R packages..."
-Rscript -e "install.packages(c('Cairo', 'svglite', 'tikzDevice', 'ragg', 'ggplot2', 'gridExtra'), repos='${CRAN}', quiet = TRUE)"
+###############################################################################
+# 📦 Install Essential Graphics R Packages (no X11 required)
+###############################################################################
 
-echo "✅ R ${R_VERSION} installation complete and fully graphics-enabled."
+Rscript -e "install.packages(c('Cairo', 'svglite', 'ragg', 'ggplot2', 'gridExtra'), repos='${CRAN}', quiet = TRUE)"
+
+echo "✅ R ${R_VERSION} installation complete with headless graphics and LaTeX."
+
+# # Core graphics, math, and font libraries (X11 dependencies removed)
+# apt-get update && apt-get install -y --no-install-recommends \
+#   libcairo2-dev libjpeg-dev libtiff5-dev libpng-dev \
+#   libfontconfig1-dev libfreetype6-dev librsvg2-dev \
+#   texlive texlive-latex-base texlive-latex-extra \
+#   texlive-fonts-recommended texlive-pictures \
+#   texinfo ghostscript libopenblas-dev && \
+#   apt-get clean && rm -rf /var/lib/apt/lists/*
