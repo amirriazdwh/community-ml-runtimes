@@ -1,0 +1,89 @@
+cp Dockerfile ../cloudera_community/community-ml-runtimes/rstudio/
+
+docker build -t peterableda/rstudio-cloudera-runtime:2025.05-r4.4 -t peterableda/rstudio-cloudera-runtime:latest .
+
+docker run -d \
+  --name rstudio-cdsw \
+  -p 8090:8090 \
+  peterableda/rstudio-cloudera-runtime:2025.05-r4.4
+
+docker run --rm -it peterableda/rstudio-cloudera-runtime:2025.05-r4.4 R --version
+
+docker run -d \
+  --name rstudio-cdsw \
+   -p 8090:8090 \
+  peterableda/rstudio-cloudera-runtime:2025.05-r4.4 \
+  /usr/local/bin/ml-runtime-editor
+
+docker run -d -p 8090:8090 --name rstudio-cdsw peterableda/rstudio-cloudera-runtime:2025.05-r4.4 \
+  /usr/local/bin/ml-runtime-editor \
+  --server-daemonize=0 \
+  --www-port=8090 \
+  --www-address=0.0.0.0 \
+  --www-use-secure-cookie=0
+
+
+docker build \
+  -t peterableda/rstudio-cloudera-runtime:2025.05-r4.4 \
+  -t peterableda/rstudio-cloudera-runtime:latest \
+  .
+
+docker run -d -p 8090:8787 --name rstudio-cdsw peterableda/rstudio-cloudera-runtime:2025.05-r4.4 \
+  /usr/local/bin/ml-runtime-editor
+
+################################
+docker run -d -p 8090:8090 --name rstudio-cdsw peterableda/rstudio-cloudera-runtime:2025.05-r4.4 \
+  /usr/local/bin/ml-runtime-editor
+###################################
+
+docker logs rstudio-cdsw
+
+docker stop $(docker ps -q)
+docker rm -f $(docker ps -aq)
+docker rmi -f $(docker images -q)
+docker builder prune -af
+docker system prune -af --volumes
+
+docker stop $(docker ps -q) && \
+docker rm -f $(docker ps -aq) && \
+docker rmi -f $(docker images -q) && \
+docker system prune -af --volumes
+
+docker builder prune -af
+
+http://172.25.243.196:8090/
+
+##################
+# testing
+#####################
+docker exec -it rstudio-server bash
+docker run -it --entrypoint /bin/bash peterableda/rstudio-cloudera-runtime:2025.05-r4.4
+
+netstat -tulnp | grep 8787
+
+cat /home/cdsw/.local/share/rstudio/log/rserver.log
+
+rm -f /home/cdsw/.local/share/rstudio/log/rserver.log
+
+docker exec -it rstudio-cdsw bash
+ps aux | grep rserver
+
+cat /etc/rstudio/rserver.conf
+ls -ld /etc/rstudio
+ls -l /etc/rstudio/rserver.conf
+
+cat /var/log/rstudio-server.log
+
+
+Updating HTML index of packages in '.Library'
+Warning in install.packages :
+  cannot create file '/usr/local/lib/R/doc/html/packages.html', reason 'Permission denied'
+Warning in install.packages :
+  cannot update HTML package index
+
+
+docker run -d -p 8787:8787 --name rstudio-server peterableda/rstudio-cloudera-runtime:2025.05-r4.4
+
+docker run -it --entrypoint /bin/bash rstudio-server
+
+docker run -it --rm --entrypoint /bin/bash peterableda/rstudio-cloudera-runtime:2025.05-r4.4
