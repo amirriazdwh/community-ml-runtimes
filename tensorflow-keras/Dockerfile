@@ -64,13 +64,13 @@ RUN pip install -r /home/keras/keras.io/requirements.txt
 
 # Override Runtime label and environment variables metadata
 ENV ML_RUNTIME_EDITION="Tensorflow Keras" \
-	ML_RUNTIME_SHORT_VERSION="2022.05" \
-	ML_RUNTIME_MAINTENANCE_VERSION="1" \
+    ML_RUNTIME_SHORT_VERSION="2022.05" \
+    ML_RUNTIME_MAINTENANCE_VERSION="1" \
     ML_RUNTIME_FULL_VERSION="2022.05.1" \
     ML_RUNTIME_DESCRIPTION="This runtime includes Tensorflow Keras with code samples"
 
 LABEL com.cloudera.ml.runtime.edition=$ML_RUNTIME_EDITION \
-	  com.cloudera.ml.runtime.full-version=$ML_RUNTIME_FULL_VERSION \
-      com.cloudera.ml.runtime.short-version=$ML_RUNTIME_SHORT_VERSION \
-      com.cloudera.ml.runtime.maintenance-version=$ML_RUNTIME_MAINTENANCE_VERSION \
-      com.cloudera.ml.runtime.description=$ML_RUNTIME_DESCRIPTION
+  com.cloudera.ml.runtime.full-version=$ML_RUNTIME_FULL_VERSION \
+  com.cloudera.ml.runtime.short-version=$ML_RUNTIME_SHORT_VERSION \
+  com.cloudera.ml.runtime.maintenance-version=$ML_RUNTIME_MAINTENANCE_VERSION \
+  com.cloudera.ml.runtime.description=$ML_RUNTIME_DESCRIPTION
