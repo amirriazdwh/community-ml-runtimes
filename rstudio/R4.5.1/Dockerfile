@@ -20,16 +20,17 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OMP_NUM_THREADS=1 \
     R_MAX_VSIZE=8G \
     LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8 \
-    PATH=$PATH:/usr/local/lib/R/bin
+    LC_ALL=en_US.UTF-8
+    
+    ENV PATH="/usr/local/lib/R/bin:${PATH}"
 
 # 02: System Dependencies
 COPY docker_parts/02_system_dependencies.sh /tmp/docker_parts/02_system_dependencies.sh
 RUN test -f /tmp/docker_parts/02_system_dependencies.sh && chmod +x /tmp/docker_parts/02_system_dependencies.sh && /tmp/docker_parts/02_system_dependencies.sh
 
-# Python is required by CML runtime engine
 RUN apt-get update && apt-get install -y python3 python3-pip && \
-    ln -s /usr/bin/python3 /usr/bin/python
+    if [ ! -e /usr/bin/python ]; then ln -s /usr/bin/python3 /usr/bin/python; fi
+
 
 # 03: Create cdsw User
 COPY docker_parts/03_create_user.sh /tmp/docker_parts/03_create_user.sh
@@ -85,13 +86,13 @@ RUN ln -s /usr/local/bin/start_rstudio.sh /usr/local/bin/ml-runtime-editor
 
 # ===== Final User Setup and Cleanup =====
 RUN set -e && \
+    mkdir -p /home/${CDSW_USER} && \
     mkdir -p /home/${CDSW_USER}/.rstudio/monitored/user-settings && \
     echo "alwaysSaveHistory=0" > /home/${CDSW_USER}/.rstudio/monitored/user-settings/user-settings && \
     chown -R ${CDSW_USER_ID}:${CDSW_GROUP_ID} /home/${CDSW_USER} /usr/local/lib/R
-
 # # Final cleanup to reduce image size
-RUN rm -rf /tmp/docker_parts \
-    && apt-get clean \
+RUN apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/* \
     && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
 
 ENV ML_RUNTIME_METADATA_VERSION=2 \
