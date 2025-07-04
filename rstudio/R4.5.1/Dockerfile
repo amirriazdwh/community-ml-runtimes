@@ -25,9 +25,15 @@ ENV DEBIAN_FRONTEND=noninteractive \
     ENV PATH="/usr/local/lib/R/bin:${PATH}"
 
 # 02: System Dependencies
-COPY docker_parts/02_system_dependencies.sh /tmp/docker_parts/02_system_dependencies.sh
-RUN test -f /tmp/docker_parts/02_system_dependencies.sh && chmod +x /tmp/docker_parts/02_system_dependencies.sh && /tmp/docker_parts/02_system_dependencies.sh
+COPY ubuntu-packages /opt/ubuntu-packages
+COPY install_debs.sh /tmp/install_debs.sh
 
+# Make the script executable
+RUN chmod +x /tmp/install_debs.sh && \
+    /tmp/install_debs.sh && \
+    rm -rf /var/lib/apt/lists/* /opt/ubuntu-packages /tmp/install_debs.sh
+
+# install python3 and
 RUN apt-get update && apt-get install -y python3 python3-pip && \
     if [ ! -e /usr/bin/python ]; then ln -s /usr/bin/python3 /usr/bin/python; fi
 
