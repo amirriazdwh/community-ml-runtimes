@@ -87,3 +87,7 @@ docker run -d -p 8787:8787 --name rstudio-server peterableda/rstudio-cloudera-ru
 docker run -it --entrypoint /bin/bash rstudio-server
 
 docker run -it --rm --entrypoint /bin/bash peterableda/rstudio-cloudera-runtime:2025.05-r4.4
+
+git restore /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/Dockerfile
+git log /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/Dockerfile
+git checkout 3d6df5df5ac5469f7aff01995d0e5b704320779b /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/Dockerfile
