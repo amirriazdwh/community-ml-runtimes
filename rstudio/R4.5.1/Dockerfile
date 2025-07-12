@@ -5,7 +5,7 @@ RUN [ -d /tmp/docker_parts ] || mkdir -p /tmp/docker_parts
 
 # 01: Environment Variables
 ENV DEBIAN_FRONTEND=noninteractive \
-    TZ=UTC \
+    TZ=Asia/Dubai \
     CDSW_USER=cdsw \
     CDSW_USER_ID=8536 \
     CDSW_GROUP_ID=8536 \
@@ -20,9 +20,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OMP_NUM_THREADS=1 \
     R_MAX_VSIZE=8G \
     LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8
-    
-    ENV PATH="/usr/local/lib/R/bin:${PATH}"
+    LC_ALL=en_US.UTF-8 \
+    PATH="/usr/local/lib/R/bin:${PATH}"
 
 # 02: System Dependencies
 COPY docker_parts/02_system_dependencies.sh /tmp/docker_parts/02_system_dependencies.sh
@@ -66,10 +65,6 @@ COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
 # COPY docker_parts/09_install_advanced_r_graphics.sh /tmp/09_install_advanced_r_graphics.sh
 # RUN chmod +x /tmp/09_install_advanced_r_graphics.sh && \
 #     /tmp/09_install_advanced_r_graphics.sh
-
-# USER root
-# COPY docker_parts/xvfb_startup.sh /usr/local/bin/xvfb_startup.sh
-# RUN chmod +x /usr/local/bin/xvfb_startup.sh
 
 # 09: RStudio startup script
 COPY docker_parts/09_start_rstudio.sh /usr/local/bin/start_rstudio.sh

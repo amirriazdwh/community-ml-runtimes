@@ -18,10 +18,9 @@ Rscript -e "cat('R capabilities:\n'); print(capabilities()); cat('\nSession Info
 ###############################################################################
 
 Rscript -e "install.packages(c(
-  'data.table', 'dplyr', 'readr', 'readxl',
-  'DBI', 'odbc', 'httr', 'jsonlite', 'curl',
-  'lubridate', 'forcats', 'stringr', 'glue',
-  'fs', 'rlang', 'remotes', 'tibble', 'tidyr'
+   'readr', 'readxl',
+  'DBI', 'odbc', 'httr', 'jsonlite', 'curl', 'forcats',  'glue',
+  'fs', 'rlang', 'remotes', 'tibble'
 ), repos = '${CRAN}', quiet = TRUE)"
 
 ###############################################################################
@@ -29,7 +28,7 @@ Rscript -e "install.packages(c(
 ###############################################################################
 
 Rscript -e "install.packages(c(
-  'rmarkdown', 'knitr', 'bookdown', 'tinytex', 'quarto',
+   'knitr', 'bookdown', 'tinytex', 'quarto',
   'renv', 'pak', 'digest', 'assertthat'
 ), repos = '${CRAN}', quiet = TRUE)"
 

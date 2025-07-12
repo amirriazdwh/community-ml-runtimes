@@ -24,9 +24,10 @@ apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install R graphics-related packages
 echo "📦 Installing R graphics packages..."
-Rscript -e "install.packages(c('Cairo', 'ggplot2', 'gridExtra', 'gridBase'), repos=Sys.getenv('CRAN'), quiet=TRUE)"
-Rscript -e "install.packages(c('svglite', 'tikzDevice'), repos=Sys.getenv('CRAN'), quiet=TRUE)"
-
+#this is dupplication.
+#Rscript -e "install.packages(c('svglite', 'tikzDevice'), repos=Sys.getenv('CRAN'), quiet=TRUE)"
+#Rscript -e "install.packages(c('gridExtra', 'gridBase'), repos=Sys.getenv('CRAN'), quiet=TRUE)"
+# duplicate end here. 
 # Set bitmapType to 'cairo' for headless graphics
 echo "options(bitmapType='cairo')" >> /usr/local/lib/R/etc/Rprofile.site
 
