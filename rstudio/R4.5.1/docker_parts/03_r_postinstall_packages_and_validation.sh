@@ -23,25 +23,30 @@ Rscript -e "install.packages(c(
   'fs', 'rlang', 'remotes', 'tibble'
 ), repos = '${CRAN}', quiet = TRUE)"
 
+#odbc failed.
+
 ###############################################################################
 # 📄 3. Install Reporting, Reproducibility, and Workflow Tools
 ###############################################################################
 
-Rscript -e "install.packages(c(
-   'knitr', 'bookdown', 'tinytex', 'quarto',
+# 1. Set CRAN mirror and install packages (safe quoting)
+Rscript -e "options(repos = c(CRAN = 'https://cran.rstudio.com')); install.packages(c(
+  'knitr', 'bookdown', 'tinytex', 'quarto',
   'renv', 'pak', 'digest', 'assertthat'
-), repos = '${CRAN}', quiet = TRUE)"
+), quiet = TRUE)"
 
-# Ensure TinyTeX is properly initialized (safe to rerun)
-Rscript -e "if (!tinytex::is_tinytex()) tinytex::install_tinytex()"
+# 2. Only initialize TinyTeX if needed — use single quotes to avoid shell interpreting !
+Rscript -e 'if (!tinytex::is_tinytex()) message("System TeX Live is available, skipping TinyTeX install.")'
+
 
 ###############################################################################
 # 🧵 4. Parallelism, Future, Multithreading
 ###############################################################################
 
 Rscript -e "install.packages(c(
-  'future', 'parallel', 'doParallel', 'foreach', 'furrr'
-), repos = '${CRAN}', quiet = TRUE)"
+  'future', 'doParallel', 'foreach', 'furrr'
+), repos = 'https://cran.rstudio.com', quiet = TRUE)"
+
 
 ###############################################################################
 # 🔌 5. Optional: DB/Cloud Integrations

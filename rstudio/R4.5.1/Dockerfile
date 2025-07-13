@@ -42,6 +42,10 @@ RUN test -f /tmp/docker_parts/03_create_user.sh && chmod +x /tmp/docker_parts/03
 COPY docker_parts/04_install_r.sh /tmp/docker_parts/04_install_r.sh
 RUN test -f /tmp/docker_parts/04_install_r.sh && chmod +x /tmp/docker_parts/04_install_r.sh && /tmp/docker_parts/04_install_r.sh
 
+# 06: Banking packages
+COPY docker_parts/06_install_banking_packages.sh /tmp/docker_parts/06_install_banking_packages.sh
+RUN test -f /tmp/docker_parts/06_install_banking_packages.sh && chmod +x /tmp/docker_parts/06_install_banking_packages.sh && /tmp/docker_parts/06_install_banking_packages.sh
+
 # Ensure R shared libraries are discoverable
 RUN echo "/usr/local/lib/R/lib" > /etc/ld.so.conf.d/R.conf && ldconfig
 
@@ -50,9 +54,7 @@ RUN echo "/usr/local/lib/R/lib" > /etc/ld.so.conf.d/R.conf && ldconfig
 COPY docker_parts/05_set_r_memory.sh /tmp/docker_parts/05_set_r_memory.sh
 RUN test -f /tmp/docker_parts/05_set_r_memory.sh && mv /tmp/docker_parts/05_set_r_memory.sh /etc/profile.d/set_r_memory.sh && chmod 755 /etc/profile.d/set_r_memory.sh
 
-# 06: Banking packages
-# COPY docker_parts/06_banking_packages.sh /tmp/docker_parts/06_banking_packages.sh
-# RUN test -f /tmp/docker_parts/06_banking_packages.sh && chmod +x /tmp/docker_parts/06_banking_packages.sh && /tmp/docker_parts/06_banking_packages.sh
+
 
 # 07: RStudio server installation and configuration
 COPY docker_parts/07_rstudio_install.sh /tmp/docker_parts/07_rstudio_install.sh
@@ -61,22 +63,12 @@ RUN test -f /tmp/docker_parts/07_rstudio_install.sh && chmod +x /tmp/docker_part
 # 08: RStudio rserver.conf configuration
 COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
 
-# Copy script into image
-# COPY docker_parts/09_install_advanced_r_graphics.sh /tmp/09_install_advanced_r_graphics.sh
-# RUN chmod +x /tmp/09_install_advanced_r_graphics.sh && \
-#     /tmp/09_install_advanced_r_graphics.sh
-
 # 09: RStudio startup script
 COPY docker_parts/09_start_rstudio.sh /usr/local/bin/start_rstudio.sh
 RUN test -f /usr/local/bin/start_rstudio.sh && chmod +x /usr/local/bin/start_rstudio.sh
 
 # CML expects ml-runtime-editor entrypoint for launching RStudio
 RUN ln -s /usr/local/bin/start_rstudio.sh /usr/local/bin/ml-runtime-editor
-
-# # Copy script into image
-# COPY docker_parts/09_install_advanced_r_graphics.sh /tmp/09_install_advanced_r_graphics.sh
-# RUN chmod +x /tmp/09_install_advanced_r_graphics.sh && \
-#     /tmp/09_install_advanced_r_graphics.sh
 
 
 # ===== Final User Setup and Cleanup =====
