@@ -54,14 +54,21 @@ RUN echo "/usr/local/lib/R/lib" > /etc/ld.so.conf.d/R.conf && ldconfig
 COPY docker_parts/05_set_r_memory.sh /tmp/docker_parts/05_set_r_memory.sh
 RUN test -f /tmp/docker_parts/05_set_r_memory.sh && mv /tmp/docker_parts/05_set_r_memory.sh /etc/profile.d/set_r_memory.sh && chmod 755 /etc/profile.d/set_r_memory.sh
 
-
-
 # 07: RStudio server installation and configuration
 COPY docker_parts/07_rstudio_install.sh /tmp/docker_parts/07_rstudio_install.sh
 RUN test -f /tmp/docker_parts/07_rstudio_install.sh && chmod +x /tmp/docker_parts/07_rstudio_install.sh && /tmp/docker_parts/07_rstudio_install.sh
 
 # 08: RStudio rserver.conf configuration
 COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
+
+#8 postinstalled packages
+# This script installs additional R packages that are not included in the base image.
+# It is designed to be run after the main R installation and configuration steps.
+# It ensures that the necessary packages are available for use in RStudio.
+# It is expected to be run as part of the Docker build process.
+# It is assumed that the necessary R environment and dependencies are already set up.
+COPY docker_parts/08_r_postinstall_packages.sh /tmp/docker_parts/08_r_postinstall_packages.sh
+RUN test -f /tmp/docker_parts/08_r_postinstall_packages.sh && chmod +x /tmp/docker_parts/08_r_postinstall_packages.sh && /tmp/docker_parts/08_r_postinstall_packages.sh 
 
 # 09: RStudio startup script
 COPY docker_parts/09_start_rstudio.sh /usr/local/bin/start_rstudio.sh
