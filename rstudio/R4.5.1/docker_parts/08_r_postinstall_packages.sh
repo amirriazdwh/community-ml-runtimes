@@ -7,6 +7,56 @@ echo "📦 Installing core R packages for professional use..."
 : "${CRAN:=https://cran.rstudio.com}"
 
 ###############################################################################
+# 🧰 APT: Install missing system dependencies for R packages (Ubuntu 22.04)
+###############################################################################
+
+echo "🔧 Installing required system libraries..."
+
+sudo apt-get update -qq && sudo apt-get install -y \
+  # General build tools
+  build-essential \
+  g++ \
+  cmake \
+  git \
+  curl \
+  wget \
+  unzip \
+  libssl-dev \
+  libxml2-dev \
+  libcurl4-openssl-dev \
+  pkg-config \
+  zlib1g-dev \
+  libbz2-dev \
+  libicu-dev \
+  libjpeg-dev \
+  libpng-dev \
+  libtiff5-dev \
+  libreadline-dev \
+  libx11-dev \
+  libxt-dev \
+  libgl1-mesa-dev \
+  libglu1-mesa-dev \
+  libfreetype6-dev \
+  libharfbuzz-dev \
+  libfribidi-dev \
+  # For odbc
+  unixodbc-dev \
+  # For RPostgres
+  libpq-dev \
+  # For RMariaDB
+  libmariadb-dev libmariadb-dev-compat \
+  # For arrow
+  libzstd-dev liblz4-dev libsnappy-dev libboost-all-dev \
+  libarrow-dev libprotobuf-dev protobuf-compiler \
+  libutf8proc-dev libre2-dev libgoogle-glog-dev \
+  # For bigrquery (optional: supports GCP authentication)
+  libcurl4-openssl-dev \
+  # For future, parallelism
+  libgomp1
+
+echo "✅ System dependencies installed."
+
+###############################################################################
 # 🧪 1. Validate R Graphics and Capabilities
 ###############################################################################
 
@@ -23,21 +73,17 @@ Rscript -e "install.packages(c(
   'fs', 'rlang', 'remotes', 'tibble'
 ), repos = '${CRAN}', quiet = TRUE)"
 
-#odbc failed.
-
 ###############################################################################
 # 📄 3. Install Reporting, Reproducibility, and Workflow Tools
 ###############################################################################
 
-# 1. Set CRAN mirror and install packages (safe quoting)
 Rscript -e "options(repos = c(CRAN = 'https://cran.rstudio.com')); install.packages(c(
   'knitr', 'bookdown', 'tinytex', 'quarto',
   'renv', 'pak', 'digest', 'assertthat'
 ), quiet = TRUE)"
 
-# 2. Only initialize TinyTeX if needed — use single quotes to avoid shell interpreting !
+# TinyTeX (skip if TeX Live is already present)
 Rscript -e 'if (!tinytex::is_tinytex()) message("System TeX Live is available, skipping TinyTeX install.")'
-
 
 ###############################################################################
 # 🧵 4. Parallelism, Future, Multithreading
@@ -45,8 +91,7 @@ Rscript -e 'if (!tinytex::is_tinytex()) message("System TeX Live is available, s
 
 Rscript -e "install.packages(c(
   'future', 'doParallel', 'foreach', 'furrr'
-), repos = 'https://cran.rstudio.com', quiet = TRUE)"
-
+), repos = '${CRAN}', quiet = TRUE)"
 
 ###############################################################################
 # 🔌 5. Optional: DB/Cloud Integrations
@@ -58,5 +103,5 @@ Rscript -e "install.packages(c(
 
 echo "✅ All core packages for professional R use have been installed successfully."
 
-# Optional: run this to check installed packages
+# Optional: List installed packages
 Rscript -e "cat('Installed packages:\n'); print(installed.packages()[, c('Package', 'Version')])"
