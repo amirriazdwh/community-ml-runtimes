@@ -1,19 +1,17 @@
 #!/bin/bash
 set -e
 
+echo "🛠 Preparing apt environment..."
+apt-get update && apt-get install -y apt-utils
+
 echo "📦 Installing core R packages for professional use..."
 
-# Default CRAN fallback
 : "${CRAN:=https://cran.rstudio.com}"
-
-###############################################################################
-# 🧰 APT: Install missing system dependencies for R packages (Ubuntu 22.04)
-###############################################################################
 
 echo "🔧 Installing required system libraries..."
 
-sudo apt-get update -qq && sudo apt-get install -y \
-  # General build tools
+# ✅ SINGLE apt-get install block — DO NOT BREAK
+apt-get update -qq && apt-get install -y \
   build-essential \
   g++ \
   cmake \
@@ -39,63 +37,45 @@ sudo apt-get update -qq && sudo apt-get install -y \
   libfreetype6-dev \
   libharfbuzz-dev \
   libfribidi-dev \
-  # For odbc
   unixodbc-dev \
-  # For RPostgres
   libpq-dev \
-  # For RMariaDB
-  libmariadb-dev libmariadb-dev-compat \
-  # For arrow
-  libzstd-dev liblz4-dev libsnappy-dev libboost-all-dev \
-  libarrow-dev libprotobuf-dev protobuf-compiler \
-  libutf8proc-dev libre2-dev libgoogle-glog-dev \
-  # For bigrquery (optional: supports GCP authentication)
-  libcurl4-openssl-dev \
-  # For future, parallelism
+  libmariadb-dev \
+  libmariadb-dev-compat \
+  libzstd-dev \
+  liblz4-dev \
+  libsnappy-dev \
+  libboost-all-dev \
+  libprotobuf-dev \
+  protobuf-compiler \
+  libutf8proc-dev \
+  libre2-dev \
+  libgoogle-glog-dev \
+  python3-dev \
+  python3-venv \
+  python3-pip \
   libgomp1
 
 echo "✅ System dependencies installed."
 
-###############################################################################
-# 🧪 1. Validate R Graphics and Capabilities
-###############################################################################
-
 echo "🧪 Checking R graphics and system capabilities..."
 Rscript -e "cat('R capabilities:\n'); print(capabilities()); cat('\nSession Info:\n'); sessionInfo()"
 
-###############################################################################
-# 📦 2. Install Core Development & Data Packages
-###############################################################################
-
 Rscript -e "install.packages(c(
-   'readr', 'readxl',
-  'DBI', 'odbc', 'httr', 'jsonlite', 'curl', 'forcats',  'glue',
+  'readr', 'readxl',
+  'DBI', 'odbc', 'httr', 'jsonlite', 'curl', 'forcats', 'glue',
   'fs', 'rlang', 'remotes', 'tibble'
 ), repos = '${CRAN}', quiet = TRUE)"
 
-###############################################################################
-# 📄 3. Install Reporting, Reproducibility, and Workflow Tools
-###############################################################################
-
-Rscript -e "options(repos = c(CRAN = 'https://cran.rstudio.com')); install.packages(c(
+Rscript -e "options(repos = c(CRAN = '${CRAN}')); install.packages(c(
   'knitr', 'bookdown', 'tinytex', 'quarto',
   'renv', 'pak', 'digest', 'assertthat'
 ), quiet = TRUE)"
 
-# TinyTeX (skip if TeX Live is already present)
 Rscript -e 'if (!tinytex::is_tinytex()) message("System TeX Live is available, skipping TinyTeX install.")'
-
-###############################################################################
-# 🧵 4. Parallelism, Future, Multithreading
-###############################################################################
 
 Rscript -e "install.packages(c(
   'future', 'doParallel', 'foreach', 'furrr'
 ), repos = '${CRAN}', quiet = TRUE)"
-
-###############################################################################
-# 🔌 5. Optional: DB/Cloud Integrations
-###############################################################################
 
 Rscript -e "install.packages(c(
   'RPostgres', 'RMariaDB', 'duckdb', 'arrow', 'bigrquery'
@@ -103,5 +83,4 @@ Rscript -e "install.packages(c(
 
 echo "✅ All core packages for professional R use have been installed successfully."
 
-# Optional: List installed packages
-Rscript -e "cat('Installed packages:\n'); print(installed.packages()[, c('Package', 'Version')])"
+Rscript -e "cat(\"Installed packages:\\n\"); print(installed.packages()[, c('Package', 'Version')])"
