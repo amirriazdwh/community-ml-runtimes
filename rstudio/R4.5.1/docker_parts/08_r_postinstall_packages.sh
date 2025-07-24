@@ -53,7 +53,8 @@ apt-get update -qq && apt-get install -y \
   python3-dev \
   python3-venv \
   python3-pip \
-  libgomp1
+  libgomp1 \
+  libgsl-dev
 
 echo "✅ System dependencies installed."
 

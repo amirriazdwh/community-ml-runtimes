@@ -24,7 +24,7 @@ docker run -d -p 8090:8090 --name rstudio-cdsw peterableda/rstudio-cloudera-runt
 
 
 docker build \
-  -t peterableda/rstudio-cloudera-runtime:2025.05-r4.4 \
+  -t peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1 \
   -t peterableda/rstudio-cloudera-runtime:latest \
   .
 
@@ -96,8 +96,13 @@ docker run -d \
   --name=rstudio-server \
   --memory=28g \
   -p 8787:8787 \
-  peterableda/rstudio-cloudera-runtime:2025.05-r4.4
+  peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
 
   docker build \
   -t peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1 \
   .
+
+
+  fix
+  /usr/lib/rstudio-server/bin/rsession --version
+sed -i 's/2025.05.1+513/2025.05.1-513/' /usr/lib/rstudio-server/bin/rsession

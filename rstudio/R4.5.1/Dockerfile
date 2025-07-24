@@ -10,7 +10,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     CDSW_USER_ID=8536 \
     CDSW_GROUP_ID=8536 \
     R_VERSION=4.5.1 \
-    RSTUDIO_VERSION=2025.05.1-513 \
+    #RSTUDIO_VERSION=2025.05.1-513 \
+    RSTUDIO_VERSION=2025.02.0-511 \
     CRAN=https://cloud.r-project.org/ \
     R_HOME=/usr/local/lib/R \
     R_LIBS_USER=/usr/local/lib/R/site-library \
@@ -30,25 +31,26 @@ RUN test -f /tmp/docker_parts/02_system_dependencies.sh && chmod +x /tmp/docker_
 RUN apt-get update && apt-get install -y python3 python3-pip && \
     if [ ! -e /usr/bin/python ]; then ln -s /usr/bin/python3 /usr/bin/python; fi
 
-
 # 03: Create cdsw User
 COPY docker_parts/03_create_user.sh /tmp/docker_parts/03_create_user.sh
 RUN test -f /tmp/docker_parts/03_create_user.sh && chmod +x /tmp/docker_parts/03_create_user.sh && /tmp/docker_parts/03_create_user.sh
 
+# Ensure /var/log is writable by cdsw user
+RUN chown -R cdsw:cdsw /var/log
+
 # Ensure /home/cdsw exists and is correctly owned
-# RUN mkdir -p /home/cdsw && chown -R 8536:8536 /home/cdsw
+RUN mkdir -p /home/cdsw && chown -R 8536:8536 /home/cdsw
 
 # 04: Install R from source
 COPY docker_parts/04_install_r.sh /tmp/docker_parts/04_install_r.sh
 RUN test -f /tmp/docker_parts/04_install_r.sh && chmod +x /tmp/docker_parts/04_install_r.sh && /tmp/docker_parts/04_install_r.sh
 
 # 06: Banking packages
-COPY docker_parts/06_install_banking_packages.sh /tmp/docker_parts/06_install_banking_packages.sh
-RUN test -f /tmp/docker_parts/06_install_banking_packages.sh && chmod +x /tmp/docker_parts/06_install_banking_packages.sh && /tmp/docker_parts/06_install_banking_packages.sh
+# COPY docker_parts/06_install_banking_packages.sh /tmp/docker_parts/06_install_banking_packages.sh
+# RUN test -f /tmp/docker_parts/06_install_banking_packages.sh && chmod +x /tmp/docker_parts/06_install_banking_packages.sh && /tmp/docker_parts/06_install_banking_packages.sh
 
 # Ensure R shared libraries are discoverable
 RUN echo "/usr/local/lib/R/lib" > /etc/ld.so.conf.d/R.conf && ldconfig
-
 
 # 05: Global R options and memory tuning
 COPY docker_parts/05_set_r_memory.sh /tmp/docker_parts/05_set_r_memory.sh
@@ -61,14 +63,20 @@ RUN test -f /tmp/docker_parts/07_rstudio_install.sh && chmod +x /tmp/docker_part
 # 08: RStudio rserver.conf configuration
 COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
 
-#8 postinstalled packages
-# This script installs additional R packages that are not included in the base image.
-# It is designed to be run after the main R installation and configuration steps.
-# It ensures that the necessary packages are available for use in RStudio.
-# It is expected to be run as part of the Docker build process.
-# It is assumed that the necessary R environment and dependencies are already set up.
-COPY docker_parts/08_r_postinstall_packages.sh /tmp/docker_parts/08_r_postinstall_packages.sh
-RUN test -f /tmp/docker_parts/08_r_postinstall_packages.sh && chmod +x /tmp/docker_parts/08_r_postinstall_packages.sh && /tmp/docker_parts/08_r_postinstall_packages.sh 
+# 08: Post-installed packages
+# COPY docker_parts/08_r_postinstall_packages.sh /tmp/docker_parts/08_r_postinstall_packages.sh
+# RUN test -f /tmp/docker_parts/08_r_postinstall_packages.sh && chmod +x /tmp/docker_parts/08_r_postinstall_packages.sh && /tmp/docker_parts/08_r_postinstall_packages.sh 
+
+# Ensure secure cookie key permissions
+RUN mkdir -p /etc/rstudio && \
+    head -c 512 /dev/urandom > /etc/rstudio/secure-cookie-key && \
+    chmod 0600 /etc/rstudio/secure-cookie-key && \
+    chown cdsw:cdsw /etc/rstudio/secure-cookie-key
+
+# Ensure R environment variables are writable
+RUN touch /usr/local/lib/R/etc/Renviron.site && \
+    chmod 664 /usr/local/lib/R/etc/Renviron.site && \
+    chown cdsw:cdsw /usr/local/lib/R/etc/Renviron.site
 
 # 09: RStudio startup script
 COPY docker_parts/09_start_rstudio.sh /usr/local/bin/start_rstudio.sh
@@ -77,17 +85,20 @@ RUN test -f /usr/local/bin/start_rstudio.sh && chmod +x /usr/local/bin/start_rst
 # CML expects ml-runtime-editor entrypoint for launching RStudio
 RUN ln -s /usr/local/bin/start_rstudio.sh /usr/local/bin/ml-runtime-editor
 
-
 # ===== Final User Setup and Cleanup =====
 RUN set -e && \
     mkdir -p /home/${CDSW_USER} && \
     mkdir -p /home/${CDSW_USER}/.rstudio/monitored/user-settings && \
     echo "alwaysSaveHistory=0" > /home/${CDSW_USER}/.rstudio/monitored/user-settings/user-settings && \
     chown -R ${CDSW_USER_ID}:${CDSW_GROUP_ID} /home/${CDSW_USER} /usr/local/lib/R
-# # Final cleanup to reduce image size
+
+# Final cleanup to reduce image size
 RUN apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/* \
     && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+
+# Healthcheck to ensure RStudio is running
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s \
+  CMD curl -f http://localhost:8787/ || exit 1
 
 ENV ML_RUNTIME_METADATA_VERSION=2 \
     ML_RUNTIME_EDITOR="RStudio" \
@@ -110,12 +121,8 @@ LABEL \
     com.cloudera.ml.runtime.maintenance-version=$ML_RUNTIME_MAINTENANCE_VERSION \
     com.cloudera.ml.runtime.git-hash=$ML_RUNTIME_GIT_HASH
 
-
 # Final container setup
 EXPOSE 8787
 WORKDIR /home/cdsw
 USER cdsw
 CMD ["/usr/local/bin/start_rstudio.sh"]
-# Healthcheck to ensure RStudio is running
-# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s \
-#   CMD curl -f http://localhost:8787/ || exit 1

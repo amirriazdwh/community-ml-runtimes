@@ -1,9 +1,16 @@
 #!/bin/bash
 set -e
 
-# Download and install RStudio Server
-echo "📦 Downloading and installing RStudio Server version: $RSTUDIO_VERSION"
-wget https://download2.rstudio.org/server/jammy/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb -O /tmp/rstudio.deb
+# RSTUDIO_VERSION=2024.12.1-506
+# # Download and install RStudio Server
+# echo "📦 Downloading and installing RStudio Server version: $RSTUDIO_VERSION"
+# wget https://download2.rstudio.org/server/jammy/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb -O /tmp/rstudio.deb
+# gdebi -n /tmp/rstudio.deb
+# rm /tmp/rstudio.deb
+
+RSTUDIO_URL=https://s3.amazonaws.com/rstudio-ide-build/server/jammy/amd64/rstudio-server-2025.05.0-496-amd64.deb
+echo "📦 Installing RStudio Server 2025.05.0+496" 
+wget $RSTUDIO_URL -O /tmp/rstudio.deb
 gdebi -n /tmp/rstudio.deb
 rm /tmp/rstudio.deb
 
