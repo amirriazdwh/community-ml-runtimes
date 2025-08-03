@@ -93,9 +93,10 @@ git log /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/D
 git checkout 3d6df5df5ac5469f7aff01995d0e5b704320779b /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/Dockerfile
 
 docker run -d \
-  --name=rstudio-server \
+  --name=rstudio-server \ \
   --memory=28g \
   -p 8787:8787 \
+  -v mydata:/home/cdsw/  \
   peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
 
   docker build \
