@@ -93,10 +93,11 @@ git log /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/D
 git checkout 3d6df5df5ac5469f7aff01995d0e5b704320779b /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/Dockerfile
 
 docker run -d \
-  --name=rstudio-server \ \
+  --user cdsw \
+  --name=rstudio-server \
   --memory=28g \
   -p 8787:8787 \
-  -v mydata:/home/cdsw/  \
+  -v mydata:/home  \
   peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
 
   docker build \
@@ -107,3 +108,17 @@ docker run -d \
   fix
   /usr/lib/rstudio-server/bin/rsession --version
 sed -i 's/2025.05.1+513/2025.05.1-513/' /usr/lib/rstudio-server/bin/rsession
+
+
+# 1. Create the user 'dev1' with home directory and bash shell
+useradd -m -s /bin/bash dev1
+
+# 2. Set password for 'dev1' to 'dev1'
+echo "dev1:dev1" | chpasswd
+
+# 3. Add 'dev1' to group 'cdsw'
+usermod -aG cdsw dev1
+
+# 4. (Optional) Copy default bash configs
+cp /etc/skel/.bash* /home/dev1/
+chown -R dev1:dev1 /home/dev1
