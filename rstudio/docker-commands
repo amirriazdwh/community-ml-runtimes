@@ -57,7 +57,8 @@ http://172.25.243.196:8090/
 # testing
 #####################
 docker exec -it rstudio-server bash
-docker run -it --entrypoint /bin/bash peterableda/rstudio-cloudera-runtime:2025.05-r4.4
+docker run -it --entrypoint /bin/bash peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
+
 
 netstat -tulnp | grep 8787
 
