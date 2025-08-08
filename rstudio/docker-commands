@@ -131,6 +131,11 @@ usermod -aG cdsw dev1
 cp /etc/skel/.bash* /home/dev1/
 chown -R dev1:dev1 /home/dev1
 
+docker run -d \
+  --name=rstudio-server \
+  --memory=28g \
+  -p 8787:8787 \
+  peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
 
 
 docker run -d \
@@ -141,7 +146,6 @@ docker run -d \
   peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
 
   docker run -it \
-  --user cdsw \
   --name rstudio-server \
   -p 8787:8787 \
   peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1 \
