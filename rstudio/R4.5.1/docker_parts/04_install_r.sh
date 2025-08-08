@@ -101,10 +101,21 @@ R_LIBS_USER='/usr/local/lib/R/site-library'
 PATH=\${PATH}:/usr/local/lib/R/bin
 EOF
 
-# Ensure correct ownership for cdsw user (must exist)
-chown cdsw:cdsw /usr/local/lib/R/etc/Renviron.site
-chown cdsw:cdsw /usr/local/lib/R/etc/Rprofile.site
-chown -R cdsw:cdsw /usr/local/lib/R/site-library
+# Ensure correct ownership for multi-user setup (rstudio-users group)
+chown root:rstudio-users /usr/local/lib/R/etc/Renviron.site
+chown root:rstudio-users /usr/local/lib/R/etc/Rprofile.site
+chown -R root:rstudio-users /usr/local/lib/R/site-library
+
+# Set group write permissions so all users can install packages
+chmod 664 /usr/local/lib/R/etc/Renviron.site
+chmod 664 /usr/local/lib/R/etc/Rprofile.site
+chmod -R 775 /usr/local/lib/R/site-library
+
+# Ensure R executable has correct permissions
+chmod +x /usr/local/bin/R
+chmod +x /usr/local/bin/Rscript
+chown root:rstudio-users /usr/local/bin/R
+chown root:rstudio-users /usr/local/bin/Rscript
 
 ###############################################################################
 # 📦 Install Essential Graphics R Packages (no X11 required)

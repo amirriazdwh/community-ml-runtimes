@@ -101,6 +101,13 @@ docker run -d \
   -v mydata:/home  \
   peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
 
+  docker run -it \
+  --name rstudio-server \
+  -p 8787:8787 \
+  peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1 \
+  /bin/bash
+
+
   docker build \
   -t peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1 \
   .
@@ -123,3 +130,37 @@ usermod -aG cdsw dev1
 # 4. (Optional) Copy default bash configs
 cp /etc/skel/.bash* /home/dev1/
 chown -R dev1:dev1 /home/dev1
+
+
+
+docker run -d \
+  --name=rstudio-server \
+  --memory=28g \
+  -p 8787:8787 \
+  -v mydata:/home \
+  peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
+
+  docker run -it \
+  --user cdsw \
+  --name rstudio-server \
+  -p 8787:8787 \
+  peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1 \
+  bash
+
+ps aux | grep rserver
+
+docker logs rstudio-cdsw
+
+docker stop $(docker ps -q)
+docker rm -f $(docker ps -aq)
+docker rmi -f $(docker images -q)
+docker builder prune -af
+docker system prune -af --volumes
+
+docker stop $(docker ps -q) && \
+docker rm -f $(docker ps -aq) && \
+docker rmi -f $(docker images -q) && \
+docker system prune -af --volumes
+
+docker builder prune -af
+
