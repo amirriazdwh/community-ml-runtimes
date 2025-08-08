@@ -41,47 +41,27 @@ for user in cdsw dev1 dev2; do
         continue
     fi
     
-    echo "alwaysSaveHistory=0" > /home/$user/.rstudio/monitored/user-settings/user-settings
+    # Create user-settings file with comprehensive preferences
+    cat <<SETTINGS > /home/$user/.rstudio/monitored/user-settings/user-settings
+alwaysSaveHistory=0
+loadRData=0
+saveAction=0
+showLineNumbers=1
+highlightSelectedLine=1
+highlightSelectedWord=1
+softWrapRFiles=0
+showMargin=1
+marginColumn=120
+enableCodeIndexing=1
+showHiddenFiles=0
+fontSize=10
+theme=Tomorrow Night Bright
+uiTheme=Modern
+SETTINGS
     
     # Set proper ownership - home directories should be owned by the user
     chown -R $user:$user /home/$user
     chmod 755 /home/$user
-done
-
-# ===============================
-# === GUI Preferences for All Users ==
-# ===============================
-# Create RStudio preferences for all users
-for user in cdsw dev1 dev2; do
-    echo "🎨 Setting up RStudio preferences for user: $user"
-    mkdir -p /home/$user/.config/rstudio
-    cat <<PREFS > /home/$user/.config/rstudio/rstudio-prefs.json
-{
-  "font_size_points": 10,
-  "ui_theme": "Modern",
-  "editor_theme": "Tomorrow Night Bright",
-  "show_line_numbers": true,
-  "highlight_selected_line": true,
-  "soft_wrap_r_files": false,
-  "save_workspace": "never",
-  "load_workspace": false,
-  "scroll_past_end": true,
-  "show_margin": true,
-  "margin_column": 120,
-  "enable_code_completion": true,
-  "show_hidden_files": false
-}
-PREFS
-    
-    # Verify config directory creation
-    if [ ! -d "/home/$user/.config/rstudio" ]; then
-        echo "⚠️ Failed to create config directory for $user"
-        continue
-    fi
-    
-    # Set proper ownership for user's config directory
-    chown -R $user:$user /home/$user/.config
-    chmod -R 755 /home/$user/.config
 done
 
 # R shared site library access

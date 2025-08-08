@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-RSTUDIO_VERSION=2024.12.1-506
+RSTUDIO_VERSION=2025.05.1-513
 # Download and install RStudio Server
 echo "📦 Downloading and installing RStudio Server version: $RSTUDIO_VERSION"
 wget https://download2.rstudio.org/server/jammy/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb -O /tmp/rstudio.deb
@@ -68,6 +68,68 @@ Rscript -e "webshot::install_phantomjs()" || echo "⚠️ PhantomJS installation
 
 # Set bitmapType to 'cairo' for all R sessions
 echo "options(bitmapType='cairo')" >> /usr/local/lib/R/etc/Rprofile.site
+
+# ===============================
+# === Create RStudio User Preferences (JSON Format for 2025.x) ===
+# ===============================
+echo "� Creating global RStudio preferences for all users..."
+
+# Create system-wide RStudio configuration directory
+mkdir -p /etc/rstudio
+
+# Create global preference defaults that apply to all users
+cat <<GLOBAL_PREFS > /etc/rstudio/rstudio-prefs.json
+{
+  "font_size_points": 10,
+  "global_theme": "alternate",
+  "editor_theme": "Textmate (default)",
+  "show_line_numbers": true,
+  "show_margin": true,
+  "margin_column": 120,
+  "save_workspace": "never",
+  "load_workspace": false,
+  "always_save_history": false,
+  "reuse_sessions_for_project_links": true,
+  "soft_wrap_r_files": false,
+  "highlight_selected_line": true,
+  "highlight_selected_word": true,
+  "show_hidden_files": false,
+  "enable_code_indexing": true
+}
+GLOBAL_PREFS
+
+# Create user settings template for legacy format compatibility
+cat <<USER_SETTINGS > /etc/rstudio/user-settings
+alwaysSaveHistory=0
+loadRData=0
+saveAction=0
+showLineNumbers=1
+highlightSelectedLine=1
+highlightSelectedWord=1
+softWrapRFiles=0
+showMargin=1
+marginColumn=120
+enableCodeIndexing=1
+showHiddenFiles=0
+fontSize=10
+theme=Tomorrow Night Bright
+uiTheme=Modern
+USER_SETTINGS
+
+# Create a system-wide profile script that sets user preferences on login
+cat <<PROFILE > /etc/profile.d/rstudio-defaults.sh
+#!/bin/bash
+# Set up RStudio user preferences on first login
+if [ "\$USER" != "root" ] && [ ! -f "\$HOME/.rstudio-prefs-set" ]; then
+    mkdir -p "\$HOME/.config/rstudio"
+    cp /etc/rstudio/rstudio-prefs.json "\$HOME/.config/rstudio/" 2>/dev/null || true
+    chown "\$USER:\$USER" "\$HOME/.config/rstudio/rstudio-prefs.json" 2>/dev/null || true
+    touch "\$HOME/.rstudio-prefs-set"
+fi
+PROFILE
+chmod +x /etc/profile.d/rstudio-defaults.sh
+
+echo "✅ Global RStudio preferences configured for all users"
 
 # Cleanup cache and temp files (but preserve user homes during installation)
 rm -rf /tmp/* /var/tmp/* /root/.cache /var/lib/apt/lists/*
