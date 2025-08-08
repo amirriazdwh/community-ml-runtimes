@@ -19,11 +19,11 @@ mkdir -p /etc/rstudio /var/lib/rstudio-server
 chmod 1777 /var/lib/rstudio-server
 chown -R cdsw:cdsw /var/lib/rstudio-server
 
-# Create secure cookie key
+# Create secure cookie key with proper multi-user permissions
 echo "🔑 Creating secure-cookie-key..."
 head -c 512 /dev/urandom > /etc/rstudio/secure-cookie-key
 chmod 0600 /etc/rstudio/secure-cookie-key
-chown cdsw:cdsw /etc/rstudio/secure-cookie-key
+chown root:rstudio-users /etc/rstudio/secure-cookie-key
 
 # Increase file descriptor limits
 cat <<EOF >> /etc/security/limits.conf
@@ -59,15 +59,20 @@ Rscript -e "webshot::install_phantomjs()"
 Rscript -e "tinytex::install_tinytex(force = TRUE)"
 
 # Set bitmapType to 'cairo'
+# Set bitmapType to 'cairo' for all R sessions
 echo "options(bitmapType='cairo')" >> /usr/local/lib/R/etc/Rprofile.site
-# Cleanup cache and temp files
-rm -rf /tmp/* /var/tmp/* /root/.cache /home/cdsw/.cache /var/lib/apt/lists/*
+
+# Cleanup cache and temp files (but preserve user homes during installation)
+rm -rf /tmp/* /var/tmp/* /root/.cache /var/lib/apt/lists/*
 
 # ===============================
-# === GUI Preferences for cdsw ==
+# === GUI Preferences for All Users ==
 # ===============================
-mkdir -p /home/cdsw/.config/rstudio && \
-  cat <<PREFS > /home/cdsw/.config/rstudio/rstudio-prefs.json
+# Create RStudio preferences for all users
+for user in cdsw dev1 dev2; do
+    echo "🎨 Setting up RStudio preferences for user: $user"
+    mkdir -p /home/$user/.config/rstudio
+    cat <<PREFS > /home/$user/.config/rstudio/rstudio-prefs.json
 {
   "font_size_points": 9,
   "font": "Fira Code",
@@ -85,4 +90,5 @@ mkdir -p /home/cdsw/.config/rstudio && \
   "show_hidden_files": false
 }
 PREFS
-chown -R cdsw:cdsw /home/cdsw/.config
+    chown -R $user:rstudio-users /home/$user/.config
+done
