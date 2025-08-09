@@ -168,3 +168,7 @@ docker system prune -af --volumes
 
 docker builder prune -af
 
+sudo R -e "install.packages('sf')" → Root's personal library (not useful)
+sudo R -e "install.packages('sf', lib='/usr/local/lib/R/site-library')" → Global library (everyone benefits)
+R -e "install.packages('sf')" → User's personal library (only that user)
+

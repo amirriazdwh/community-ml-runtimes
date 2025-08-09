@@ -13,6 +13,10 @@ if ! systemctl status rstudio-server &>/dev/null; then
     echo "⚠️ RStudio Server installation may have issues"
 fi
 
+# Fix RStudio version string format in rsession binary
+echo "🔧 Fixing RStudio version string format..."
+sed -i 's/2025.05.1+513/2025.05.1-513/' /usr/lib/rstudio-server/bin/rsession
+
 # Setup runtime directories with proper multi-user permissions
 mkdir -p /etc/rstudio /var/lib/rstudio-server
 chmod 775 /var/lib/rstudio-server
