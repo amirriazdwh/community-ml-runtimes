@@ -80,20 +80,23 @@ mkdir -p /etc/rstudio
 # Create global preference defaults that apply to all users
 cat <<GLOBAL_PREFS > /etc/rstudio/rstudio-prefs.json
 {
-  "font_size_points": 10,
-  "global_theme": "alternate",
-  "editor_theme": "Textmate (default)",
+  "font_size_points": 9,
+  "font": "Fira Code",
+  "global_theme": "Modern",
+  "ui_theme": "Modern",
+  "editor_theme": "Tomorrow Night Bright",
   "show_line_numbers": true,
-  "show_margin": true,
-  "margin_column": 120,
+  "highlight_selected_line": true,
+  "soft_wrap_r_files": false,
   "save_workspace": "never",
   "load_workspace": false,
+  "scroll_past_end": true,
+  "show_margin": true,
+  "margin_column": 120,
+  "enable_code_completion": true,
+  "show_hidden_files": false,
   "always_save_history": false,
   "reuse_sessions_for_project_links": true,
-  "soft_wrap_r_files": false,
-  "highlight_selected_line": true,
-  "highlight_selected_word": true,
-  "show_hidden_files": false,
   "enable_code_indexing": true
 }
 GLOBAL_PREFS
@@ -105,26 +108,32 @@ loadRData=0
 saveAction=0
 showLineNumbers=1
 highlightSelectedLine=1
-highlightSelectedWord=1
 softWrapRFiles=0
 showMargin=1
 marginColumn=120
 enableCodeIndexing=1
 showHiddenFiles=0
-fontSize=10
+fontSize=9
+font=Fira Code
 theme=Tomorrow Night Bright
 uiTheme=Modern
+globalTheme=Modern
+enableCodeCompletion=1
+scrollPastEnd=1
 USER_SETTINGS
 
 # Create a system-wide profile script that sets user preferences on login
 cat <<PROFILE > /etc/profile.d/rstudio-defaults.sh
 #!/bin/bash
 # Set up RStudio user preferences on first login
-if [ "\$USER" != "root" ] && [ ! -f "\$HOME/.rstudio-prefs-set" ]; then
-    mkdir -p "\$HOME/.config/rstudio"
-    cp /etc/rstudio/rstudio-prefs.json "\$HOME/.config/rstudio/" 2>/dev/null || true
-    chown "\$USER:\$USER" "\$HOME/.config/rstudio/rstudio-prefs.json" 2>/dev/null || true
-    touch "\$HOME/.rstudio-prefs-set"
+# Only run for regular users (UID >= 1000) and skip root
+if [ "\$USER" != "root" ] && [ "\$(id -u)" -ge 1000 ] && [ -w "\$HOME" ] && [ ! -f "\$HOME/.rstudio-prefs-set" ]; then
+    mkdir -p "\$HOME/.config/rstudio" 2>/dev/null || true
+    if [ -f "/etc/rstudio/rstudio-prefs.json" ]; then
+        cp /etc/rstudio/rstudio-prefs.json "\$HOME/.config/rstudio/" 2>/dev/null || true
+        chown "\$USER:\$USER" "\$HOME/.config/rstudio/rstudio-prefs.json" 2>/dev/null || true
+    fi
+    touch "\$HOME/.rstudio-prefs-set" 2>/dev/null || true
 fi
 PROFILE
 chmod +x /etc/profile.d/rstudio-defaults.sh

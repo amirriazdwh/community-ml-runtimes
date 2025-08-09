@@ -53,7 +53,10 @@ RUN test -f /tmp/docker_parts/07_rstudio_install.sh && chmod +x /tmp/docker_part
 # Create RStudio-specific log directories with proper permissions (after RStudio install)
 RUN mkdir -p /var/log/rstudio-server /var/log/rstudio-sessions && \
     chown -R root:rstudio-users /var/log/rstudio-server /var/log/rstudio-sessions && \
-    chmod -R 775 /var/log/rstudio-server /var/log/rstudio-sessions
+    chmod -R 775 /var/log/rstudio-server /var/log/rstudio-sessions && \
+    touch /var/log/r_profile_memory.log && \
+    chown root:rstudio-users /var/log/r_profile_memory.log && \
+    chmod 664 /var/log/r_profile_memory.log
 
 # 08: RStudio rserver.conf configuration
 COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
@@ -80,7 +83,7 @@ RUN apt-get clean \
 
 # Healthcheck to ensure RStudio is running
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s \
-  CMD curl -f http://localhost:8787/ || exit 1
+  CMD wget --quiet --tries=1 --spider http://localhost:8787/ || exit 1
 
 ENV ML_RUNTIME_METADATA_VERSION=2 \
     ML_RUNTIME_EDITOR="RStudio" \

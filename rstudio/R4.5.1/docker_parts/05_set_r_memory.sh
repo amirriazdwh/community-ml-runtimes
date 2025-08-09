@@ -25,7 +25,20 @@ fi
 
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 
-echo "[$TIMESTAMP] [R_PROFILE] Setting R_MAX_VSIZE=${R_MEM}M based on memory" | tee -a /var/log/r_profile_memory.log >&2
+# Create log file with proper permissions if it doesn't exist
+if [ ! -f /var/log/r_profile_memory.log ]; then
+    touch /var/log/r_profile_memory.log 2>/dev/null || {
+        # If we can't create in /var/log, use /tmp instead
+        echo "[$TIMESTAMP] [R_PROFILE] Setting R_MAX_VSIZE=${R_MEM}M based on memory" >&2
+    }
+fi
+
+# Try to log to file, fallback to stderr only if it fails
+if [ -w /var/log/r_profile_memory.log ] 2>/dev/null; then
+    echo "[$TIMESTAMP] [R_PROFILE] Setting R_MAX_VSIZE=${R_MEM}M based on memory" | tee -a /var/log/r_profile_memory.log >&2
+else
+    echo "[$TIMESTAMP] [R_PROFILE] Setting R_MAX_VSIZE=${R_MEM}M based on memory" >&2
+fi
 
 if ! grep -q "R_MAX_VSIZE=" /usr/local/lib/R/etc/Renviron.site; then
     echo "R_MAX_VSIZE=${R_MEM}M" >> /usr/local/lib/R/etc/Renviron.site
@@ -35,7 +48,7 @@ echo ""
 echo "🔧 [INFO] R_MAX_VSIZE has been set to ${R_MEM}M (80% of available memory)"
 echo ""
 
-# Rotate log if over 1MB
-if [ -f /var/log/r_profile_memory.log ] && [ $(stat -c%s /var/log/r_profile_memory.log) -ge 1048576 ]; then
-    mv /var/log/r_profile_memory.log /var/log/r_profile_memory.log.old
+# Rotate log if over 1MB (only if we have write permissions)
+if [ -f /var/log/r_profile_memory.log ] && [ -w /var/log/r_profile_memory.log ] && [ $(stat -c%s /var/log/r_profile_memory.log 2>/dev/null || echo 0) -ge 1048576 ]; then
+    mv /var/log/r_profile_memory.log /var/log/r_profile_memory.log.old 2>/dev/null || true
 fi
