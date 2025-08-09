@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RStudio Server 2025.05.1-513 - Installed Packages by Category</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #007acc;
+        }
+
+        .header h1 {
+            color: #007acc;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            font-style: italic;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .stat-card p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .toc {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #007acc;
+        }
+
+        .toc h2 {
+            color: #007acc;
+            margin-bottom: 15px;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .toc a {
+            color: #0056b3;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .toc a:hover {
+            background-color: #e3f2fd;
+            text-decoration: underline;
+        }
+
+        h1 {
+            color: #007acc;
+            font-size: 2.2em;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007acc;
+        }
+
+        h2 {
+            color: #0056b3;
+            font-size: 1.8em;
+            margin: 25px 0 15px 0;
+            padding-left: 15px;
+            border-left: 4px solid #007acc;
+        }
+
+        h3 {
+            color: #333;
+            font-size: 1.4em;
+            margin: 20px 0 10px 0;
+            padding: 10px;
+            background: #f1f8ff;
+            border-radius: 5px;
+        }
+
+        .category-section {
+            margin-bottom: 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, #007acc 0%, #0056b3 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .category-header .icon {
+            font-size: 2em;
+        }
+
+        .category-header h2 {
+            margin: 0;
+            padding: 0;
+            border: none;
+            color: white;
+        }
+
+        .category-content {
+            padding: 20px;
+        }
+
+        .package-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .package-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .package-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .package-name {
+            font-weight: bold;
+            color: #007acc;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .package-description {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .package-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .package-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #333;
+            transition: background-color 0.3s ease;
+        }
+
+        .package-item:hover {
+            background-color: #f0f8ff;
+            border-color: #007acc;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffeaa7 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin: 2px;
+        }
+
+        .badge-core {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-graphics {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-network {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-database {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-dev {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #007acc;
+            text-align: center;
+            color: #666;
+        }
+
+        .nav-links {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 200px;
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .nav-links h4 {
+            margin-bottom: 10px;
+            color: #007acc;
+        }
+
+        .nav-links a {
+            display: block;
+            padding: 5px 0;
+            color: #0056b3;
+            text-decoration: none;
+            font-size: 0.8em;
+        }
+
+        .nav-links a:hover {
+            color: #007acc;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 1024px) {
+            .nav-links {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .package-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-overview {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <h4>Quick Navigation</h4>
+        <a href="#overview">Overview</a>
+        <a href="#core">Core System</a>
+        <a href="#development">Development</a>
+        <a href="#graphics">Graphics</a>
+        <a href="#network">Network</a>
+        <a href="#database">Database</a>
+        <a href="#geospatial">Geospatial</a>
+        <a href="#compression">Compression</a>
+        <a href="#multimedia">Multimedia</a>
+        <a href="#language">Language</a>
+        <a href="#scientific">Scientific</a>
+        <a href="#security">Security</a>
+        <a href="#python">Python</a>
+        <a href="#r-packages">R Packages</a>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>RStudio Server 2025.05.1-513</h1>
+            <div class="subtitle">Comprehensive Package Inventory by Category</div>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <h3>200+</h3>
+                <p>System Packages</p>
+            </div>
+            <div class="stat-card">
+                <h3>13</h3>
+                <p>Package Categories</p>
+            </div>
+            <div class="stat-card">
+                <h3>28GB</h3>
+                <p>Memory Allocation</p>
+            </div>
+            <div class="stat-card">
+                <h3>50+</h3>
+                <p>R Packages</p>
+            </div>
+        </div>
+
+        <div class="toc">
+            <h2>📋 Package Categories</h2>
+            <div class="toc-grid">
+                <a href="#core">🔧 Core System</a>
+                <a href="#development">💻 Development Tools</a>
+                <a href="#graphics">🎨 Graphics & Visualization</a>
+                <a href="#network">🌐 Network & Connectivity</a>
+                <a href="#database">🗄️ Database Support</a>
+                <a href="#geospatial">🗺️ Geospatial Libraries</a>
+                <a href="#compression">📦 Compression & Archives</a>
+                <a href="#multimedia">🎵 Multimedia Processing</a>
+                <a href="#language">🌍 Language & Localization</a>
+                <a href="#scientific">🧮 Scientific Computing</a>
+                <a href="#security">🔒 Security & Cryptography</a>
+                <a href="#python">🐍 Python Integration</a>
+                <a href="#r-packages">📊 R Packages</a>
+            </div>
+        </div>
+
+        <section id="overview" class="section">
+            <h1><span class="emoji">🎯</span>Overview</h1>
+            <div class="highlight-box">
+                <p>This document provides a comprehensive inventory of all packages installed in the RStudio Server Docker container, organized by functional categories. Each category includes both system-level Ubuntu packages and related R packages that provide specific functionality for data science workflows.</p>
+            </div>
+        </section>
+
+        <section id="core" class="category-section">
+            <div class="category-header">
+                <span class="icon">🔧</span>
+                <h2>Core System Libraries</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Essential system components and runtime libraries required for basic system operation, process management, and core Ubuntu functionality.</strong></p>
+                </div>
+                
+                <h3>Base System</h3>
+                <div class="package-list">
+                    <div class="package-item">base-files</div>
+                    <div class="package-item">base-passwd</div>
+                    <div class="package-item">bash</div>
+                    <div class="package-item">coreutils</div>
+                    <div class="package-item">dash</div>
+                    <div class="package-item">debconf</div>
+                    <div class="package-item">debianutils</div>
+                    <div class="package-item">diffutils</div>
+                    <div class="package-item">dpkg</div>
+                    <div class="package-item">e2fsprogs</div>
+                    <div class="package-item">findutils</div>
+                    <div class="package-item">grep</div>
+                    <div class="package-item">gzip</div>
+                    <div class="package-item">hostname</div>
+                    <div class="package-item">init-system-helpers</div>
+                    <div class="package-item">login</div>
+                    <div class="package-item">mount</div>
+                    <div class="package-item">ncurses-base</div>
+                    <div class="package-item">ncurses-bin</div>
+                    <div class="package-item">passwd</div>
+                    <div class="package-item">perl-base</div>
+                    <div class="package-item">sed</div>
+                    <div class="package-item">sysvinit-utils</div>
+                    <div class="package-item">tar</div>
+                    <div class="package-item">ubuntu-keyring</div>
+                    <div class="package-item">util-linux</div>
+                </div>
+
+                <h3>Runtime Libraries</h3>
+                <div class="package-list">
+                    <div class="package-item">libc6</div>
+                    <div class="package-item">libgcc-s1</div>
+                    <div class="package-item">libstdc++6</div>
+                    <div class="package-item">zlib1g</div>
+                    <div class="package-item">libssl3</div>
+                    <div class="package-item">libcrypt1</div>
+                    <div class="package-item">libncurses6</div>
+                    <div class="package-item">libtinfo6</div>
+                    <div class="package-item">libreadline8</div>
+                    <div class="package-item">libpam0g</div>
+                    <div class="package-item">libsystemd0</div>
+                    <div class="package-item">libudev1</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="development" class="category-section">
+            <div class="category-header">
+                <span class="icon">💻</span>
+                <h2>Development Tools & Compilers</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Complete development environment including compilers, build tools, version control, and package management utilities essential for R compilation and package development.</strong></p>
+                </div>
+
+                <h3>Compilers & Build Tools</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">build-essential</div>
+                        <div class="package-description">Meta-package including GCC, make, and essential development tools</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">gcc-11</div>
+                        <div class="package-description">GNU C compiler (version 11)</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">g++-11</div>
+                        <div class="package-description">GNU C++ compiler</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">gfortran-11</div>
+                        <div class="package-description">GNU Fortran compiler for scientific computing</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">make</div>
+                        <div class="package-description">Build automation tool</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">cmake</div>
+                        <div class="package-description">Cross-platform build system generator</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">autoconf</div>
+                        <div class="package-description">Automatic configure script builder</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">automake</div>
+                        <div class="package-description">Tool for generating Makefile.in files</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libtool</div>
+                        <div class="package-description">Generic library support script</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">pkg-config</div>
+                        <div class="package-description">Library compilation flag management</div>
+                    </div>
+                </div>
+
+                <h3>Version Control & Package Management</h3>
+                <div class="package-list">
+                    <div class="package-item">git</div>
+                    <div class="package-item">subversion</div>
+                    <div class="package-item">dpkg-dev</div>
+                    <div class="package-item">devscripts</div>
+                    <div class="package-item">apt-utils</div>
+                    <div class="package-item">software-properties-common</div>
+                </div>
+
+                <h3>Development Libraries</h3>
+                <div class="package-list">
+                    <div class="package-item">libc6-dev</div>
+                    <div class="package-item">linux-libc-dev</div>
+                    <div class="package-item">libgcc-11-dev</div>
+                    <div class="package-item">libstdc++-11-dev</div>
+                    <div class="package-item">libssl-dev</div>
+                    <div class="package-item">libffi-dev</div>
+                    <div class="package-item">zlib1g-dev</div>
+                    <div class="package-item">libbz2-dev</div>
+                    <div class="package-item">liblzma-dev</div>
+                    <div class="package-item">libncurses-dev</div>
+                    <div class="package-item">libreadline-dev</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="graphics" class="category-section">
+            <div class="category-header">
+                <span class="icon">🎨</span>
+                <h2>Graphics & Visualization</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Comprehensive graphics stack including X11, Cairo, image processing libraries, and LaTeX for publication-quality visualizations and document generation.</strong></p>
+                </div>
+
+                <h3>Core Graphics Libraries</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">libcairo2-dev</div>
+                        <div class="package-description">2D graphics library with support for multiple output devices</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libpango1.0-dev</div>
+                        <div class="package-description">Text rendering and layout library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libgdk-pixbuf-2.0-dev</div>
+                        <div class="package-description">Image loading and manipulation library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libgtk-3-dev</div>
+                        <div class="package-description">GTK+ 3.0 graphical user interface library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">librsvg2-dev</div>
+                        <div class="package-description">SVG rendering library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libfreetype6-dev</div>
+                        <div class="package-description">Font rendering library</div>
+                    </div>
+                </div>
+
+                <h3>X11 Graphics System</h3>
+                <div class="package-list">
+                    <div class="package-item">libx11-dev</div>
+                    <div class="package-item">libxext-dev</div>
+                    <div class="package-item">libxrender-dev</div>
+                    <div class="package-item">libxt-dev</div>
+                    <div class="package-item">libxmu-dev</div>
+                    <div class="package-item">libice-dev</div>
+                    <div class="package-item">libsm-dev</div>
+                </div>
+
+                <h3>Image Processing</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">libpng-dev</div>
+                        <div class="package-description">PNG image format support</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libjpeg-dev</div>
+                        <div class="package-description">JPEG image format support</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libtiff5-dev</div>
+                        <div class="package-description">TIFF image format support</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libgif-dev</div>
+                        <div class="package-description">GIF image format support</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libmagick++-dev</div>
+                        <div class="package-description">ImageMagick++ image manipulation library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libwebp-dev</div>
+                        <div class="package-description">WebP image format support</div>
+                    </div>
+                </div>
+
+                <h3>LaTeX & Document Generation</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">texlive-full</div>
+                        <div class="package-description">Complete LaTeX distribution for document typesetting</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">texlive-latex-extra</div>
+                        <div class="package-description">Additional LaTeX packages and extensions</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">texlive-fonts-extra</div>
+                        <div class="package-description">Extended font collection for LaTeX</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">pandoc</div>
+                        <div class="package-description">Universal document converter</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="network" class="category-section">
+            <div class="category-header">
+                <span class="icon">🌐</span>
+                <h2>Network & Connectivity</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Network libraries and tools for HTTP/HTTPS communication, secure connections, and web-based data access essential for modern data science workflows.</strong></p>
+                </div>
+
+                <h3>HTTP & Web Libraries</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">libcurl4-openssl-dev</div>
+                        <div class="package-description">Multi-protocol file transfer library with SSL support</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libssl-dev</div>
+                        <div class="package-description">SSL/TLS cryptographic library development files</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">ca-certificates</div>
+                        <div class="package-description">Common CA certificates for SSL verification</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">wget</div>
+                        <div class="package-description">Network downloader utility</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">curl</div>
+                        <div class="package-description">Command line tool for transferring data</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">openssh-client</div>
+                        <div class="package-description">Secure Shell client for secure remote access</div>
+                    </div>
+                </div>
+
+                <h3>Network Protocols</h3>
+                <div class="package-list">
+                    <div class="package-item">libgnutls28-dev</div>
+                    <div class="package-item">libnghttp2-dev</div>
+                    <div class="package-item">librtmp-dev</div>
+                    <div class="package-item">libssh2-1-dev</div>
+                    <div class="package-item">libldap2-dev</div>
+                    <div class="package-item">libkrb5-dev</div>
+                </div>
+
+                <h3>XML & Data Formats</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">libxml2-dev</div>
+                        <div class="package-description">XML parsing and manipulation library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libxslt1-dev</div>
+                        <div class="package-description">XSLT transformation library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libjson-c-dev</div>
+                        <div class="package-description">JSON parsing library for C</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libyaml-dev</div>
+                        <div class="package-description">YAML parsing library</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="database" class="category-section">
+            <div class="category-header">
+                <span class="icon">🗄️</span>
+                <h2>Database Connectivity</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Database drivers and connectivity libraries supporting major database systems including PostgreSQL, MySQL/MariaDB, SQLite, and ODBC connections.</strong></p>
+                </div>
+
+                <h3>Database Drivers</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">libpq-dev</div>
+                        <div class="package-description">PostgreSQL C client library development files</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libmariadb-dev</div>
+                        <div class="package-description">MariaDB/MySQL client library development files</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libsqlite3-dev</div>
+                        <div class="package-description">SQLite 3 development files</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">unixodbc-dev</div>
+                        <div class="package-description">ODBC connectivity for various database systems</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libmongoc-dev</div>
+                        <div class="package-description">MongoDB C driver development files</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">redis-tools</div>
+                        <div class="package-description">Redis command-line tools</div>
+                    </div>
+                </div>
+
+                <h3>Database Utilities</h3>
+                <div class="package-list">
+                    <div class="package-item">sqlite3</div>
+                    <div class="package-item">postgresql-client</div>
+                    <div class="package-item">mysql-client</div>
+                    <div class="package-item">redis-cli</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="geospatial" class="category-section">
+            <div class="category-header">
+                <span class="icon">🗺️</span>
+                <h2>Geospatial & Geographic Information Systems</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Comprehensive geospatial stack including GDAL, PROJ, GEOS, and related libraries for geographic data processing, coordinate transformations, and spatial analysis.</strong></p>
+                </div>
+
+                <h3>Core Geospatial Libraries</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">libgdal-dev</div>
+                        <div class="package-description">Geospatial Data Abstraction Library - comprehensive raster and vector format support</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libproj-dev</div>
+                        <div class="package-description">Cartographic projections and coordinate transformation library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libgeos-dev</div>
+                        <div class="package-description">Geometry Engine Open Source - geometric operations on geographic data</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libudunits2-dev</div>
+                        <div class="package-description">Units of measurement handling for scientific applications</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libspatialindex-dev</div>
+                        <div class="package-description">Spatial indexing library for efficient spatial queries</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libnetcdf-dev</div>
+                        <div class="package-description">Network Common Data Form libraries for scientific data</div>
+                    </div>
+                </div>
+
+                <h3>Supporting Libraries</h3>
+                <div class="package-list">
+                    <div class="package-item">libhdf5-dev</div>
+                    <div class="package-item">libspatialite-dev</div>
+                    <div class="package-item">libgeotiff-dev</div>
+                    <div class="package-item">libexpat1-dev</div>
+                    <div class="package-item">proj-data</div>
+                    <div class="package-item">gdal-data</div>
+                </div>
+
+                <h3>Command Line Tools</h3>
+                <div class="package-list">
+                    <div class="package-item">gdal-bin</div>
+                    <div class="package-item">proj-bin</div>
+                    <div class="package-item">spatialite-bin</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="compression" class="category-section">
+            <div class="category-header">
+                <span class="icon">📦</span>
+                <h2>Compression & Archive Processing</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Archive and compression utilities supporting various formats for data storage, transfer, and package management.</strong></p>
+                </div>
+
+                <h3>Compression Libraries</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">zlib1g-dev</div>
+                        <div class="package-description">General-purpose compression library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libbz2-dev</div>
+                        <div class="package-description">High-quality block-sorting file compressor</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">liblzma-dev</div>
+                        <div class="package-description">XZ compression algorithm library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libarchive-dev</div>
+                        <div class="package-description">Multi-format archive and compression library</div>
+                    </div>
+                </div>
+
+                <h3>Archive Tools</h3>
+                <div class="package-list">
+                    <div class="package-item">tar</div>
+                    <div class="package-item">gzip</div>
+                    <div class="package-item">bzip2</div>
+                    <div class="package-item">xz-utils</div>
+                    <div class="package-item">unzip</div>
+                    <div class="package-item">zip</div>
+                    <div class="package-item">p7zip-full</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="multimedia" class="category-section">
+            <div class="category-header">
+                <span class="icon">🎵</span>
+                <h2>Multimedia Processing</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Audio and video processing libraries for multimedia data analysis and content generation.</strong></p>
+                </div>
+
+                <h3>Audio Libraries</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">libasound2-dev</div>
+                        <div class="package-description">Advanced Linux Sound Architecture development files</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libpulse-dev</div>
+                        <div class="package-description">PulseAudio sound system development files</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libsndfile1-dev</div>
+                        <div class="package-description">Audio file reading and writing library</div>
+                    </div>
+                </div>
+
+                <h3>Video Libraries</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">libavcodec-dev</div>
+                        <div class="package-description">FFmpeg audio/video codec library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libavformat-dev</div>
+                        <div class="package-description">FFmpeg container format library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libavutil-dev</div>
+                        <div class="package-description">FFmpeg utility library</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="language" class="category-section">
+            <div class="category-header">
+                <span class="icon">🌍</span>
+                <h2>Language & Localization</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Internationalization and localization support for multi-language environments and text processing.</strong></p>
+                </div>
+
+                <h3>Localization Libraries</h3>
+                <div class="package-list">
+                    <div class="package-item">locales</div>
+                    <div class="package-item">locales-all</div>
+                    <div class="package-item">gettext</div>
+                    <div class="package-item">libintl-dev</div>
+                    <div class="package-item">libiconv-hook-dev</div>
+                    <div class="package-item">libicu-dev</div>
+                </div>
+
+                <h3>Text Processing</h3>
+                <div class="package-list">
+                    <div class="package-item">libpcre3-dev</div>
+                    <div class="package-item">libpcre2-dev</div>
+                    <div class="package-item">libedit-dev</div>
+                    <div class="package-item">libaspell-dev</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="scientific" class="category-section">
+            <div class="category-header">
+                <span class="icon">🧮</span>
+                <h2>Scientific Computing</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>High-performance mathematical libraries and scientific computing frameworks optimized for numerical analysis and statistical computations.</strong></p>
+                </div>
+
+                <h3>Mathematical Libraries</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">libblas-dev</div>
+                        <div class="package-description">Basic Linear Algebra Subprograms - fundamental linear algebra operations</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">liblapack-dev</div>
+                        <div class="package-description">Linear Algebra Package - advanced linear algebra routines</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libopenblas-dev</div>
+                        <div class="package-description">Optimized BLAS library for high-performance computing</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libarmadillo-dev</div>
+                        <div class="package-description">Fast C++ matrix library with high-level syntax</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libgsl-dev</div>
+                        <div class="package-description">GNU Scientific Library - comprehensive scientific computing</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libfftw3-dev</div>
+                        <div class="package-description">Fast Fourier Transform library</div>
+                    </div>
+                </div>
+
+                <h3>Statistical Computing</h3>
+                <div class="package-list">
+                    <div class="package-item">libgfortran5</div>
+                    <div class="package-item">libquadmath0</div>
+                    <div class="package-item">libarpack2-dev</div>
+                    <div class="package-item">libsuperlu-dev</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="security" class="category-section">
+            <div class="category-header">
+                <span class="icon">🔒</span>
+                <h2>Security & Cryptography</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Cryptographic libraries and security tools for data protection, authentication, and secure communications.</strong></p>
+                </div>
+
+                <h3>Cryptographic Libraries</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">libssl-dev</div>
+                        <div class="package-description">SSL/TLS toolkit development files</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libgcrypt20-dev</div>
+                        <div class="package-description">GNU cryptographic library</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libgpg-error-dev</div>
+                        <div class="package-description">Error handling library for GnuPG components</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">libsasl2-dev</div>
+                        <div class="package-description">Simple Authentication and Security Layer</div>
+                    </div>
+                </div>
+
+                <h3>Security Tools</h3>
+                <div class="package-list">
+                    <div class="package-item">gnupg</div>
+                    <div class="package-item">ca-certificates</div>
+                    <div class="package-item">openssl</div>
+                    <div class="package-item">keyutils</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="python" class="category-section">
+            <div class="category-header">
+                <span class="icon">🐍</span>
+                <h2>Python Integration</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Complete Python development environment with R integration capabilities for seamless multi-language data science workflows.</strong></p>
+                </div>
+
+                <h3>Python Runtime</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">python3.10</div>
+                        <div class="package-description">Python 3.10 interpreter and runtime</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">python3-pip</div>
+                        <div class="package-description">Python package installer</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">python3-dev</div>
+                        <div class="package-description">Python development headers and libraries</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">python3-venv</div>
+                        <div class="package-description">Python virtual environment creation</div>
+                    </div>
+                </div>
+
+                <h3>Development Tools</h3>
+                <div class="package-list">
+                    <div class="package-item">python3-setuptools</div>
+                    <div class="package-item">python3-wheel</div>
+                    <div class="package-item">python3-distutils</div>
+                    <div class="package-item">cython3</div>
+                </div>
+
+                <h3>Configuration</h3>
+                <div class="success-box">
+                    <p><strong>Environment Variable:</strong> <code>RETICULATE_PYTHON=/usr/bin/python3</code></p>
+                    <p>This configuration enables seamless R-Python integration through the reticulate package.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="r-packages" class="category-section">
+            <div class="category-header">
+                <span class="icon">📊</span>
+                <h2>Pre-installed R Packages</h2>
+            </div>
+            <div class="category-content">
+                <div class="summary-section">
+                    <p><strong>Essential R packages for data science, statistical analysis, and Python integration, installed in the system library for all users.</strong></p>
+                </div>
+
+                <h3>Core R Packages</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">base</div>
+                        <div class="package-description">Base R functions and datasets</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">stats</div>
+                        <div class="package-description">Statistical functions and tests</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">graphics</div>
+                        <div class="package-description">Base graphics system</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">grDevices</div>
+                        <div class="package-description">Graphics devices and color utilities</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">utils</div>
+                        <div class="package-description">Utility functions</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">datasets</div>
+                        <div class="package-description">Standard datasets for examples</div>
+                    </div>
+                </div>
+
+                <h3>Development & Tools</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">devtools</div>
+                        <div class="package-description">Tools for package development and installation</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">roxygen2</div>
+                        <div class="package-description">Documentation generation for R packages</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">testthat</div>
+                        <div class="package-description">Unit testing framework</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">remotes</div>
+                        <div class="package-description">Install packages from remote repositories</div>
+                    </div>
+                </div>
+
+                <h3>Data Manipulation & Analysis</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">dplyr</div>
+                        <div class="package-description">Grammar of data manipulation</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">tidyr</div>
+                        <div class="package-description">Data tidying and reshaping</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">readr</div>
+                        <div class="package-description">Fast and friendly data import</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">stringr</div>
+                        <div class="package-description">String manipulation and pattern matching</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">lubridate</div>
+                        <div class="package-description">Date and time manipulation</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">forcats</div>
+                        <div class="package-description">Factor manipulation</div>
+                    </div>
+                </div>
+
+                <h3>Visualization</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">ggplot2</div>
+                        <div class="package-description">Grammar of graphics for creating plots</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">gridExtra</div>
+                        <div class="package-description">Grid graphics utilities</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">scales</div>
+                        <div class="package-description">Scale functions for visualization</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">viridis</div>
+                        <div class="package-description">Colorblind-friendly color scales</div>
+                    </div>
+                </div>
+
+                <h3>Statistical Modeling</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">lme4</div>
+                        <div class="package-description">Linear mixed-effects models</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">survival</div>
+                        <div class="package-description">Survival analysis</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">mgcv</div>
+                        <div class="package-description">Generalized additive models</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">nlme</div>
+                        <div class="package-description">Nonlinear mixed-effects models</div>
+                    </div>
+                </div>
+
+                <h3>Python Integration</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">reticulate</div>
+                        <div class="package-description">R interface to Python - seamless Python integration</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">rPython</div>
+                        <div class="package-description">Alternative R-Python interface</div>
+                    </div>
+                </div>
+
+                <h3>Documentation & Reporting</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">knitr</div>
+                        <div class="package-description">Dynamic report generation</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">rmarkdown</div>
+                        <div class="package-description">R Markdown document format</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">tinytex</div>
+                        <div class="package-description">Lightweight LaTeX distribution</div>
+                    </div>
+                </div>
+
+                <h3>Banking & Finance (Industry-Specific)</h3>
+                <div class="package-grid">
+                    <div class="package-card">
+                        <div class="package-name">quantmod</div>
+                        <div class="package-description">Quantitative financial modeling</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">TTR</div>
+                        <div class="package-description">Technical trading rules</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">PerformanceAnalytics</div>
+                        <div class="package-description">Performance and risk analytics</div>
+                    </div>
+                    <div class="package-card">
+                        <div class="package-name">RQuantLib</div>
+                        <div class="package-description">R interface to QuantLib financial library</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h1><span class="emoji">📈</span>Package Statistics Summary</h1>
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <h3>Core System</h3>
+                    <p>35+ Essential Packages</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Development</h3>
+                    <p>25+ Build Tools</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Graphics</h3>
+                    <p>20+ Visual Libraries</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Scientific</h3>
+                    <p>15+ Math Libraries</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Geospatial</h3>
+                    <p>10+ GIS Libraries</p>
+                </div>
+                <div class="stat-card">
+                    <h3>R Packages</h3>
+                    <p>50+ Data Science</p>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h3>🎯 Key Strengths</h3>
+                <ul>
+                    <li><span class="badge badge-core">Complete Development Environment</span> - Full compilation and build capabilities</li>
+                    <li><span class="badge badge-graphics">Advanced Graphics Stack</span> - Publication-quality visualizations</li>
+                    <li><span class="badge badge-network">Network & Database Ready</span> - Comprehensive connectivity options</li>
+                    <li><span class="badge badge-database">Multi-Language Support</span> - Seamless R-Python integration</li>
+                    <li><span class="badge badge-dev">Scientific Computing</span> - High-performance mathematical libraries</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h1><span class="emoji">🔍</span>Usage Recommendations</h1>
+            
+            <h2>Package Installation Strategy</h2>
+            <div class="warning-box">
+                <ol>
+                    <li><strong>Check System Dependencies First</strong>: Verify if required system libraries are already installed</li>
+                    <li><strong>Use Appropriate Installation Method</strong>: System packages via apt, R packages via install.packages()</li>
+                    <li><strong>Consider Installation Scope</strong>: User-level vs system-wide package installation</li>
+                    <li><strong>Monitor Dependencies</strong>: Some R packages require specific system libraries</li>
+                </ol>
+            </div>
+
+            <h2>Performance Considerations</h2>
+            <div class="success-box">
+                <ul>
+                    <li><strong>OpenBLAS</strong>: Optimized linear algebra operations for better performance</li>
+                    <li><strong>Multi-threaded Libraries</strong>: BLAS/LAPACK configured for parallel computing</li>
+                    <li><strong>Memory Management</strong>: 28GB allocation optimized for large datasets</li>
+                    <li><strong>Graphics Acceleration</strong>: Cairo graphics with hardware acceleration support</li>
+                </ul>
+            </div>
+        </section>
+
+        <div class="footer">
+            <p><strong>RStudio Server 2025.05.1-513 Package Inventory</strong></p>
+            <p>Generated on August 9, 2025 | Docker Container: peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1</p>
+            <p>Total System Packages: 200+ | R Packages: 50+ | Categories: 13</p>
+        </div>
+    </div>
+</body>
+</html>
