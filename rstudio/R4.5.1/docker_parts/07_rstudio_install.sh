@@ -63,6 +63,15 @@ Rscript -e "install.packages(c( \
   'xml2', 'rsvg', 'patchwork'), repos=Sys.getenv('CRAN'), quiet=TRUE)" || {
     echo "⚠️ Some R packages failed to install, continuing..."
 }
+
+# ================================
+# === Python Integration ===
+# ================================
+echo "🐍 Installing Python integration packages..."
+Rscript -e "install.packages(c('reticulate', 'rPython'), repos=Sys.getenv('CRAN'), quiet=TRUE)" || {
+    echo "⚠️ Python integration packages failed to install, continuing..."
+}
+
 Rscript -e "webshot::install_phantomjs()" || echo "⚠️ PhantomJS installation failed"
 # Note: Using system LaTeX instead of tinytex to avoid conflicts
 
@@ -139,6 +148,98 @@ PROFILE
 chmod +x /etc/profile.d/rstudio-defaults.sh
 
 echo "✅ Global RStudio preferences configured for all users"
+
+# ================================
+# === Python Configuration ===
+# ================================
+echo "🐍 Configuring Python integration..."
+
+# Set global Python path in R environment
+echo "RETICULATE_PYTHON=/usr/bin/python3" >> /usr/local/lib/R/etc/Renviron.site
+
+# Add environment variables to prevent config directory creation issues
+echo "R_USER_CONFIG_DIR=/tmp/r-config" >> /usr/local/lib/R/etc/Renviron.site
+echo "RSTUDIO_CONFIG_HOME=/tmp/rstudio-config" >> /usr/local/lib/R/etc/Renviron.site
+
+# Create fallback config directories with proper permissions
+mkdir -p /tmp/r-config /tmp/rstudio-config
+chmod 777 /tmp/r-config /tmp/rstudio-config
+
+# Create R startup script to handle config directory issues
+cat > /usr/local/lib/R/etc/Rprofile.site << 'RPROFILE'
+# Global R profile to handle config directory issues
+local({
+  # Function to safely create config directory
+  safe_config_dir <- function() {
+    tryCatch({
+      # Try user's home first
+      user_config <- file.path(Sys.getenv("HOME"), ".config")
+      if (dir.exists(dirname(user_config)) && file.access(dirname(user_config), 2) == 0) {
+        if (!dir.exists(user_config)) {
+          dir.create(user_config, recursive = TRUE, mode = "0755")
+        }
+        return(user_config)
+      }
+      # Fall back to temp directory
+      temp_config <- "/tmp/rstudio-config"
+      if (!dir.exists(temp_config)) {
+        dir.create(temp_config, recursive = TRUE, mode = "0777")
+      }
+      return(temp_config)
+    }, error = function(e) {
+      # Final fallback
+      return(tempdir())
+    })
+  }
+  
+  # Set up config directory environment
+  config_dir <- safe_config_dir()
+  Sys.setenv(R_USER_CONFIG_DIR = config_dir)
+  Sys.setenv(RSTUDIO_CONFIG_HOME = config_dir)
+})
+RPROFILE
+
+# Ensure user directories have proper permissions for RStudio configuration
+echo "🔧 Setting up user directory permissions..."
+for user in cdsw dev1 dev2; do
+    # Ensure .config directory exists and has proper permissions
+    mkdir -p /home/$user/.config 2>/dev/null || true
+    chown $user:$user /home/$user/.config 2>/dev/null || true
+    chmod 755 /home/$user/.config 2>/dev/null || true
+    
+    # Ensure no root ownership issues in user directories
+    find /home/$user -user root -exec chown $user:$user {} \; 2>/dev/null || true
+done
+
+# Fix root config directory permission issue for RStudio Server
+echo "🔧 Fixing root config directory permissions for RStudio Server..."
+mkdir -p /root/.config 2>/dev/null || true
+chmod 755 /root/.config 2>/dev/null || true
+
+# Create a more robust startup script to handle runtime permission fixes
+cat > /usr/local/bin/fix-rstudio-permissions.sh << 'PERMFIX'
+#!/bin/bash
+# Runtime permission fixes for RStudio Server
+
+# Ensure root config directory exists and is writable
+mkdir -p /root/.config 2>/dev/null || true
+chmod 755 /root/.config 2>/dev/null || true
+
+# Ensure user config directories are properly set up
+for user in cdsw dev1 dev2; do
+    if [ -d "/home/$user" ]; then
+        mkdir -p /home/$user/.config 2>/dev/null || true
+        chown $user:$user /home/$user/.config 2>/dev/null || true
+        chmod 755 /home/$user/.config 2>/dev/null || true
+    fi
+done
+PERMFIX
+chmod +x /usr/local/bin/fix-rstudio-permissions.sh
+
+# Add permission fix to startup sequence
+echo '/usr/local/bin/fix-rstudio-permissions.sh' >> /usr/local/bin/start_rstudio.sh
+
+echo "✅ Python integration and user permissions configured"
 
 # Cleanup cache and temp files (but preserve user homes during installation)
 rm -rf /tmp/* /var/tmp/* /root/.cache /var/lib/apt/lists/*

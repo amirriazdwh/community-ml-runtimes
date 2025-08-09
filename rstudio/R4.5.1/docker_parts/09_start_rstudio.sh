@@ -16,6 +16,24 @@ fi
 mkdir -p /var/lib/rstudio-server/shared-storage
 chmod 1777 /var/lib/rstudio-server/shared-storage
 
+# Fix runtime permission issues for config directories
+echo "[INFO] Fixing config directory permissions..."
+mkdir -p /root/.config 2>/dev/null || true
+chmod 755 /root/.config 2>/dev/null || true
+
+# Ensure rstudio-server user has proper config directory
+mkdir -p /home/rstudio-server/.config 2>/dev/null || true
+chown rstudio-server:rstudio-server /home/rstudio-server/.config 2>/dev/null || true
+chmod 755 /home/rstudio-server/.config 2>/dev/null || true
+
+# Create a symlink to redirect root config to a writable location if needed
+if [ ! -w /root/.config ]; then
+    echo "[INFO] Creating fallback config directory..."
+    mkdir -p /tmp/rstudio-config
+    chmod 777 /tmp/rstudio-config
+    ln -sf /tmp/rstudio-config /root/.config-fallback
+fi
+
 # Export environment variables for all users
 env | grep -v ^LD_LIBRARY_PATH >> /usr/local/lib/R/etc/Renviron.site
 

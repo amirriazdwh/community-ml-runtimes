@@ -11,9 +11,9 @@ groupadd -g 8538 dev2 || true
 
 # Create users with proper group assignments
 if ! id -u cdsw >/dev/null 2>&1; then
-    useradd -u 8536 -g cdsw -G rstudio-users -m -s /bin/bash cdsw
+    useradd -u 8536 -g cdsw -G rstudio-users,sudo -m -s /bin/bash cdsw
     echo "cdsw:cdsw" | chpasswd
-    echo "✅ Created user: cdsw"
+    echo "✅ Created user: cdsw (with sudo access)"
 fi
 
 if ! id -u dev1 >/dev/null 2>&1; then
@@ -27,6 +27,12 @@ if ! id -u dev2 >/dev/null 2>&1; then
     echo "dev2:dev2" | chpasswd
     echo "✅ Created user: dev2"
 fi
+
+# Configure sudo access for cdsw user
+echo "🔐 Configuring sudo access for cdsw user..."
+echo "cdsw ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/cdsw
+chmod 440 /etc/sudoers.d/cdsw
+echo "✅ cdsw user can now use sudo without password"
 
 # Create monitored user-settings and assign correct ownership
 for user in cdsw dev1 dev2; do
