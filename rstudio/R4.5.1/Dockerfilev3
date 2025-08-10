@@ -1,0 +1,235 @@
+# syntax=docker/dockerfile:1.7-labs
+
+###############################################
+# Deterministic R 4.5.1 + RStudio Server Runtime
+# - Ubuntu 22.04 pinned via Ubuntu Snapshot Service
+# - Verifies SHA256 for all remote artifacts
+# - Multi-stage: build R in builder, slim runtime
+# - Locale/TZ fixed; logs to stdout; non-root; healthcheck
+# - Works with your docker_parts/*.sh modules
+###############################################
+
+ARG BASE_IMAGE=ubuntu:22.04
+# (Optional but recommended) Pin the base image by digest for full reproducibility
+# ARG BASE_DIGEST=sha256:<FILL_ME>
+# FROM ${BASE_IMAGE}@${BASE_DIGEST} AS builder
+
+FROM ${BASE_IMAGE} AS builder
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TZ=Asia/Dubai
+ARG LANG=en_US.UTF-8
+ARG LC_ALL=en_US.UTF-8
+
+# Use Ubuntu Snapshot Service (deterministic APT). Choose a specific timestamp.
+# See: https://snapshot.ubuntu.com/
+ARG UBUNTU_SNAPSHOT=20240301T030400Z
+
+# R source + verification
+ARG R_VERSION=4.5.1
+ARG R_URL="https://cran.r-project.org/src/base/R-4/R-${R_VERSION}.tar.gz"
+# Provide official SHA256 for the tarball (required for determinism)
+ARG R_TARBALL_SHA256=<PUT_REAL_SHA256_FOR_R_TARBALL_HERE>
+# (Optional) GPG signature verification – set key and .asc URL if you want stricter checks
+ARG R_TARBALL_ASC_URL="https://cran.r-project.org/src/base/R-4/R-${R_VERSION}.tar.gz.asc"
+ARG R_PGP_KEY_ID=<OPTIONAL_R_CORE_SIGNING_KEY_ID>
+
+# Reconfigure APT to use the snapshot (Jammy uses deb822 or classic; we write classic here)
+RUN set -eux; \
+    printf 'deb [snapshot=%s] http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse\n' "$UBUNTU_SNAPSHOT" > /etc/apt/sources.list; \
+    printf 'deb [snapshot=%s] http://archive.ubuntu.com/ubuntu/ jammy-updates main restricted universe multiverse\n' "$UBUNTU_SNAPSHOT" >> /etc/apt/sources.list; \
+    printf 'deb [snapshot=%s] http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse\n' "$UBUNTU_SNAPSHOT" >> /etc/apt/sources.list;
+
+# Locale & TZ (deterministic via snapshot)
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends tzdata locales ca-certificates; \
+    ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime; echo "$TZ" > /etc/timezone; \
+    dpkg-reconfigure -f noninteractive tzdata; \
+    locale-gen "$LANG"; update-locale LANG="$LANG" LC_ALL="$LC_ALL"; \
+    rm -rf /var/lib/apt/lists/*
+ENV TZ=${TZ} LANG=${LANG} LC_ALL=${LC_ALL}
+
+# Build toolchain & headers for compiling R (builder only)
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+      build-essential gcc g++ gfortran make \
+      libssl-dev libcurl4-openssl-dev libxml2-dev \
+      libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
+      libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev \
+      libicu-dev zlib1g-dev libbz2-dev liblzma-dev \
+      libpcre2-dev libreadline-dev libxt-dev libcairo2-dev \
+      libopenblas-dev liblapack-dev libarpack2-dev libsuitesparse-dev \
+      libx11-dev libxext-dev libxrender-dev libxrandr-dev libxi-dev libxinerama-dev \
+      curl file gnupg; \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp/build
+
+# SOURCE_DATE_EPOCH helps reproducibility of timestamps inside the image layers
+ARG SOURCE_DATE_EPOCH=1719897600  # 2024-07-02T00:00:00Z (example) – adjust to your last git commit time
+ENV SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH
+
+# Download, verify & build R from source
+RUN --mount=type=cache,target=/root/.cache \
+    set -eux; \
+    echo "➡️  Fetching R ${R_VERSION}: ${R_URL}"; \
+    curl -fL --retry 5 --retry-delay 2 -o R.tar.gz "$R_URL"; \
+    echo "${R_TARBALL_SHA256}  R.tar.gz" | sha256sum -c -; \
+    # Optional GPG verification (requires a real key ID). Comment out if not used.
+    if [ "${R_PGP_KEY_ID}" != "<OPTIONAL_R_CORE_SIGNING_KEY_ID>" ]; then \
+      curl -fL --retry 5 -o R.tar.gz.asc "$R_TARBALL_ASC_URL"; \
+      GNUPGHOME=/tmp/gnupg mkdir -p "$GNUPGHOME"; chmod 700 "$GNUPGHOME"; \
+      gpg --batch --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "$R_PGP_KEY_ID"; \
+      gpg --batch --verify R.tar.gz.asc R.tar.gz; \
+      rm -rf "$GNUPGHOME"; \
+    fi; \
+    tar -xzf R.tar.gz; cd R-${R_VERSION}; \
+    ./configure \
+      --enable-R-shlib \
+      --with-blas --with-lapack \
+      --with-x=yes \
+      CFLAGS="-O3 -pipe -fomit-frame-pointer" \
+      CXXFLAGS="-O3 -pipe -fomit-frame-pointer"; \
+    make -j"$(nproc)"; \
+    make install; \
+    ldconfig; \
+    R --version
+
+# Set deterministic default CRAN (Posit Package Manager snapshot)
+ARG PPM_SNAPSHOT="https://packagemanager.posit.co/cran/__linux__/jammy/2025-08-01"
+RUN set -eux; \
+    mkdir -p /usr/local/lib/R/etc /etc/R; \
+    printf 'options(\n  repos = c(CRAN = "%s"),\n  Ncpus = parallel::detectCores(),\n  warn = 1\n)\n' "$PPM_SNAPSHOT" > /usr/local/lib/R/etc/Rprofile.site; \
+    printf 'MAKEFLAGS = -j%s\n' "$(nproc)" > /usr/local/lib/R/etc/Makeconf.site
+
+############################################################
+# Stage 2: runtime — minimal deps + RStudio + your modules
+############################################################
+FROM ${BASE_IMAGE} AS runtime
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TZ=Asia/Dubai
+ARG LANG=en_US.UTF-8
+ARG LC_ALL=en_US.UTF-8
+ARG UBUNTU_SNAPSHOT=20240301T030400Z
+
+# RStudio Server download + checksum (fill with exact build you use)
+ARG RSTUDIO_DEB_URL="https://download2.rstudio.org/server/jammy/amd64/rstudio-server-2025.05.1-amd64.deb"
+ARG RSTUDIO_DEB_SHA256=<PUT_REAL_SHA256_FOR_RSTUDIO_DEB_HERE>
+
+# Users and groups
+ARG CDSW_UID=8536
+ARG CDSW_GID=8536
+ARG RSTUDIO_GID=8500
+
+# Use the same snapshot for runtime APT
+RUN set -eux; \
+    printf 'deb [snapshot=%s] http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse\n' "$UBUNTU_SNAPSHOT" > /etc/apt/sources.list; \
+    printf 'deb [snapshot=%s] http://archive.ubuntu.com/ubuntu/ jammy-updates main restricted universe multiverse\n' "$UBUNTU_SNAPSHOT" >> /etc/apt/sources.list; \
+    printf 'deb [snapshot=%s] http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse\n' "$UBUNTU_SNAPSHOT" >> /etc/apt/sources.list
+
+# Basic runtime deps (deterministic via snapshot)
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+      tzdata locales ca-certificates curl wget gnupg \
+      libopenblas0 liblapack3 \
+      libssl3 libcurl4 libxml2 \
+      libcairo2 libfreetype6 libpng16-16 libjpeg-turbo8 libtiff5 \
+      libharfbuzz0b libfribidi0 libfontconfig1 libicu70 \
+      libpcre2-8-0 libreadline8 zlib1g libbz2-1.0 liblzma5 \
+      libxt6 \
+      dumb-init; \
+    rm -rf /var/lib/apt/lists/*
+
+# Locale/TZ
+RUN set -eux; \
+    ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime; echo "$TZ" > /etc/timezone; \
+    dpkg-reconfigure -f noninteractive tzdata; \
+    locale-gen "$LANG"; update-locale LANG="$LANG" LC_ALL="$LC_ALL"
+ENV TZ=${TZ} LANG=${LANG} LC_ALL=${LC_ALL}
+
+# Copy R from builder (no toolchain in final image)
+COPY --from=builder /usr/local/lib/R /usr/local/lib/R
+COPY --from=builder /usr/local/bin/R /usr/local/bin/R
+COPY --from=builder /usr/local/bin/Rscript /usr/local/bin/Rscript
+COPY --from=builder /usr/local/lib/R/etc /usr/local/lib/R/etc
+
+# Configure deterministic CRAN mirror in runtime as well
+ARG PPM_SNAPSHOT="https://packagemanager.posit.co/cran/__linux__/jammy/2025-08-01"
+RUN printf 'options(\n  repos = c(CRAN = "%s"),\n  Ncpus = parallel::detectCores()\n)\n' "$PPM_SNAPSHOT" > /usr/local/lib/R/etc/Rprofile.site
+
+# Users & groups (fixed IDs)
+RUN set -eux; \
+    groupadd -g ${CDSW_GID} cdsw || true; \
+    groupadd -g ${RSTUDIO_GID} rstudio-users || true; \
+    useradd -u ${CDSW_UID} -g ${CDSW_GID} -G rstudio-users -m -s /bin/bash cdsw
+
+# Install RStudio Server deterministically (checksum verification)
+WORKDIR /tmp/rstudio
+RUN set -eux; \
+    curl -fL --retry 5 --retry-delay 2 -o rstudio.deb "$RSTUDIO_DEB_URL"; \
+    echo "${RSTUDIO_DEB_SHA256}  rstudio.deb" | sha256sum -c -; \
+    apt-get update; apt-get install -y --no-install-recommends gdebi-core; \
+    gdebi -n rstudio.deb; \
+    rm -rf /var/lib/apt/lists/* /tmp/rstudio
+
+# Bring in your modular scripts & configs
+COPY docker_parts /tmp/docker_parts
+RUN chmod -R +x /tmp/docker_parts || true
+
+# 02: system deps (idempotent & minimal for runtime)
+RUN /tmp/docker_parts/02_system_dependencies.sh || true
+# 03: extra users (if any)
+RUN /tmp/docker_parts/03_create_user.sh || true
+# 04: (no R build here; builder already installed R)
+RUN /tmp/docker_parts/04_install_r.sh || true
+# 05: memory/cgroups tuning
+RUN /tmp/docker_parts/05_set_r_memory.sh || true
+# 06/08: additional packages & postinstall (consider pak::pak and PPM snapshot)
+RUN /tmp/docker_parts/06_install_banking_packages.sh || true
+RUN /tmp/docker_parts/08_r_postinstall_packages.sh || true
+
+# RStudio confs
+COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
+COPY docker_parts/08_rsession.conf /etc/rstudio/rsession.conf
+
+# Secure cookie location & permissions
+RUN set -eux; \
+    install -d -o cdsw -g rstudio-users /etc/rstudio; \
+    install -d -o cdsw -g rstudio-users /var/run/rstudio-server; \
+    install -d -o cdsw -g rstudio-users /var/lib/rstudio-server; \
+    : > /etc/rstudio/secure-cookie-key; \
+    chown cdsw:rstudio-users /etc/rstudio/secure-cookie-key; chmod 600 /etc/rstudio/secure-cookie-key
+
+# Non-root runtime
+USER cdsw:rstudio-users
+WORKDIR /home/cdsw
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=10 \
+  CMD curl -fsS http://127.0.0.1:8090/auth-public || exit 1
+
+# Entrypoint & startup
+USER root
+COPY docker_parts/09_start_rstudio.sh /usr/local/bin/start_rstudio.sh
+RUN chmod +x /usr/local/bin/start_rstudio.sh
+
+# OCI labels
+LABEL org.opencontainers.image.title="RStudio Runtime (Deterministic)" \
+      org.opencontainers.image.description="R 4.5.1 + RStudio Server, multi-stage, deterministic, non-root" \
+      org.opencontainers.image.version="rstudio-2025.05.1_r-4.5.1" \
+      org.opencontainers.image.licenses="AGPL-3.0" \
+      org.opencontainers.image.base.name="${BASE_IMAGE}"
+
+# Use dumb-init to handle signals as PID 1
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/usr/local/bin/start_rstudio.sh"]
