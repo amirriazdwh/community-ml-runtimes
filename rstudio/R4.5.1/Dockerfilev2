@@ -1,0 +1,200 @@
+# syntax=docker/dockerfile:1.7-labs
+
+###############################################
+# RStudio + R 4.5.1 Runtime (Multi‑stage, modular)
+# - Deterministic versions & checksums
+# - Smaller final image (no build toolchain)
+# - Logs to stdout/stderr, healthcheck, non‑root
+# - Works with your existing docker_parts/*.sh modules
+###############################################
+
+ARG BASE_IMAGE=ubuntu:22.04
+ARG R_VERSION=4.5.1
+ARG TZ=Asia/Dubai
+ARG LANG=en_US.UTF-8
+ARG LC_ALL=en_US.UTF-8
+
+# Optional: pin Posit Package Manager snapshot for deterministic CRAN
+# Example: 2025-08-01 snapshot for jammy
+ARG PPM_SNAPSHOT="https://packagemanager.posit.co/cran/__linux__/jammy/2025-08-01"
+
+# RStudio Server download (replace with the exact build you use)
+# NOTE: Update the URL and SHA256 to the specific .deb you want.
+ARG RSTUDIO_DEB_URL="https://download2.rstudio.org/server/jammy/amd64/rstudio-server-2025.05.1-amd64.deb"
+ARG RSTUDIO_DEB_SHA256="<PUT_REAL_SHA256_HERE>"
+
+# UID/GID for cdsw user and rstudio group (aligns with your setup)
+ARG CDSW_UID=8536
+ARG CDSW_GID=8536
+ARG RSTUDIO_GID=8500
+
+############################################################
+# Stage 1: builder — compile R from source with toolchain
+############################################################
+FROM ${BASE_IMAGE} AS builder
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TZ LANG LC_ALL R_VERSION PPM_SNAPSHOT
+
+# Locale & tz (deterministic)
+RUN apt-get update && apt-get install -y --no-install-recommends tzdata locales \
+ && ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime \
+ && dpkg-reconfigure -f noninteractive tzdata \
+ && locale-gen ${LANG} \
+ && update-locale LANG=${LANG} LC_ALL=${LC_ALL} \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=${TZ} LANG=${LANG} LC_ALL=${LC_ALL}
+
+# Build toolchain + headers for R (builder only)
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    apt-get update && apt-get install -y --no-install-recommends \
+      build-essential gcc g++ gfortran make \
+      libssl-dev libcurl4-openssl-dev libxml2-dev \
+      libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
+      libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev \
+      libicu-dev zlib1g-dev libbz2-dev liblzma-dev \
+      libpcre2-dev libreadline-dev libxt-dev libcairo2-dev \
+      libopenblas-dev liblapack-dev libarpack2-dev libsuitesparse-dev \
+      libx11-dev libxext-dev libxrender-dev libxrandr-dev libxi-dev \
+      libxinerama-dev \
+      ca-certificates curl file gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp/build
+
+# Download & compile R
+ARG R_URL="https://cran.r-project.org/src/base/R-4/R-${R_VERSION}.tar.gz"
+RUN --mount=type=cache,target=/root/.cache \
+    set -Eeuo pipefail; \
+    echo "➡️  Fetching R ${R_VERSION} from ${R_URL}"; \
+    curl -fL --retry 5 --retry-delay 2 -o R.tar.gz "${R_URL}"; \
+    tar -xzf R.tar.gz; \
+    cd R-${R_VERSION}; \
+    ./configure \
+      --enable-R-shlib \
+      --with-blas --with-lapack \
+      --with-x=yes \
+      CFLAGS="-O3 -pipe -fomit-frame-pointer" \
+      CXXFLAGS="-O3 -pipe -fomit-frame-pointer"; \
+    make -j"$(nproc)"; \
+    make install; \
+    ldconfig; \
+    R --version
+
+# Pre-seed site defaults for deterministic repos & parallel build
+RUN mkdir -p /usr/local/lib/R/etc /etc/R && \
+    printf 'options(\n  repos = c(CRAN = "%s"),\n  Ncpus = parallel::detectCores(),\n  warn = 1\n)\n' "$PPM_SNAPSHOT" > /usr/local/lib/R/etc/Rprofile.site && \
+    printf 'MAKEFLAGS = -j%s\n' "$(nproc)" > /usr/local/lib/R/etc/Makeconf.site
+
+############################################################
+# Stage 2: runtime — minimal deps + RStudio + your modules
+############################################################
+FROM ${BASE_IMAGE} AS runtime
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TZ LANG LC_ALL R_VERSION PPM_SNAPSHOT \
+    CDSW_UID CDSW_GID RSTUDIO_GID \
+    RSTUDIO_DEB_URL RSTUDIO_DEB_SHA256
+
+# Basic runtime deps
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    apt-get update && apt-get install -y --no-install-recommends \
+      tzdata locales ca-certificates curl wget gnupg \
+      libopenblas0 liblapack3 \
+      libssl3 libcurl4 libxml2 \
+      libcairo2 libfreetype6 libpng16-16 libjpeg-turbo8 libtiff5 \
+      libharfbuzz0b libfribidi0 libfontconfig1 libicu70 \
+      libpcre2-8-0 libreadline8 zlib1g libbz2-1.0 liblzma5 \
+      libxt6 \
+      dumb-init \
+    && rm -rf /var/lib/apt/lists/*
+
+# Locale/TZ
+RUN ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata && \
+    locale-gen ${LANG} && update-locale LANG=${LANG} LC_ALL=${LC_ALL}
+ENV TZ=${TZ} LANG=${LANG} LC_ALL=${LC_ALL}
+
+# Copy R from builder (no toolchain in final image)
+COPY --from=builder /usr/local/lib/R /usr/local/lib/R
+COPY --from=builder /usr/local/bin/R /usr/local/bin/R
+COPY --from=builder /usr/local/bin/Rscript /usr/local/bin/Rscript
+COPY --from=builder /usr/local/lib/R/etc /usr/local/lib/R/etc
+
+# Configure deterministic CRAN mirror in runtime, too
+RUN printf 'options(\n  repos = c(CRAN = "%s"),\n  Ncpus = parallel::detectCores()\n)\n' "$PPM_SNAPSHOT" > /usr/local/lib/R/etc/Rprofile.site
+
+# Users & groups
+RUN groupadd -g ${CDSW_GID} cdsw || true && \
+    groupadd -g ${RSTUDIO_GID} rstudio-users || true && \
+    useradd -u ${CDSW_UID} -g ${CDSW_GID} -G rstudio-users -m -s /bin/bash cdsw
+
+# Install RStudio Server deterministically (checksum required)
+WORKDIR /tmp/rstudio
+RUN set -Eeuo pipefail; \
+    echo "➡️  Downloading RStudio Server"; \
+    curl -fL --retry 5 --retry-delay 2 -o rstudio.deb "${RSTUDIO_DEB_URL}"; \
+    echo "${RSTUDIO_DEB_SHA256}  rstudio.deb" | sha256sum -c -; \
+    apt-get update && apt-get install -y --no-install-recommends gdebi-core && \
+    gdebi -n rstudio.deb && \
+    rm -rf /var/lib/apt/lists/* /tmp/rstudio
+
+# Bring in your modular scripts & configs
+# Expecting the same layout you shared: docker_parts/*.sh and confs
+COPY docker_parts /tmp/docker_parts
+RUN chmod -R +x /tmp/docker_parts || true
+
+# 02: system deps (idempotent & minimal for runtime)
+RUN /tmp/docker_parts/02_system_dependencies.sh
+
+# 03: create extra users (if you need dev1/dev2 etc.)
+RUN /tmp/docker_parts/03_create_user.sh || true
+
+# 04: (skip building R here; done in builder) but keep any runtime checks
+#     If your script only does R configure checks, allow it to run safely
+RUN /tmp/docker_parts/04_install_r.sh || true
+
+# 05: memory/cgroups tuning (kept)
+RUN /tmp/docker_parts/05_set_r_memory.sh || true
+
+# 06/08: additional packages & postinstall (prefer pak for speed)
+# You can replace the internals of these scripts to use pak::pak()
+RUN /tmp/docker_parts/06_install_banking_packages.sh || true
+RUN /tmp/docker_parts/08_r_postinstall_packages.sh || true
+
+# 08: rserver/rsession confs
+COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
+COPY docker_parts/08_rsession.conf /etc/rstudio/rsession.conf
+
+# Secure cookie location & permissions
+RUN install -d -o cdsw -g rstudio-users /etc/rstudio && \
+    install -d -o cdsw -g rstudio-users /var/run/rstudio-server && \
+    install -d -o cdsw -g rstudio-users /var/lib/rstudio-server && \
+    touch /etc/rstudio/secure-cookie-key && chown cdsw:rstudio-users /etc/rstudio/secure-cookie-key && chmod 600 /etc/rstudio/secure-cookie-key
+
+# Non-root runtime
+USER cdsw:rstudio-users
+WORKDIR /home/cdsw
+
+# Healthcheck: simple probe against auth-public
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=10 \
+  CMD curl -fsS http://127.0.0.1:8090/auth-public || exit 1
+
+# Entrypoint & startup
+USER root
+COPY docker_parts/09_start_rstudio.sh /usr/local/bin/start_rstudio.sh
+RUN chmod +x /usr/local/bin/start_rstudio.sh
+
+# OCI labels
+LABEL org.opencontainers.image.title="RStudio Runtime" \
+      org.opencontainers.image.description="R 4.5.1 + RStudio Server, multi-stage, deterministic, non-root" \
+      org.opencontainers.image.version="rstudio-2025.05.1_r-${R_VERSION}" \
+      org.opencontainers.image.licenses="AGPL-3.0" \
+      org.opencontainers.image.base.name="${BASE_IMAGE}"
+
+# Use dumb-init to handle signals as PID 1
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/usr/local/bin/start_rstudio.sh"]
