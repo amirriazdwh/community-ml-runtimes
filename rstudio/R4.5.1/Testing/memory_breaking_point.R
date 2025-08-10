@@ -1,19 +1,34 @@
 #!/usr/bin/env Rscript
-# =================================================================
-# Memory Breaking Point Analysis
-# Tests system limits with progressively larger datasets
-# =================================================================
-#
-# This script tests memory limits by creating datasets of increasing size
-# until system resources are exhausted or R crashes
-#
-# Usage: Rscript memory_breaking_point.R
-# =================================================================
+# ================================================================
+# MEMORY BREAKING POINT TEST - PARALLEL DATASET LOADING
+# ================================================================
+# Purpose: Find the memory breaking point using data.table parallel reading
+# Strategy: Load increasingly larger datasets until memory failure
+# View results in RStudio with detailed memory reporting
+# ================================================================
 
-library(data.table)
-library(parallel)
+suppressPackageStartupMessages({
+  library(data.table)
+  library(parallel)
+  library(pryr)
+})
 
-# Helper function to format bytes
+# Configuration
+NUM_CORES <- detectCores()
+BASE_ROWS <- 1000000  # Start with 1M rows
+MAX_ROWS <- 50000000  # Up to 50M rows (potential 10-15GB)
+STEP_MULTIPLIER <- 1.5  # Increase by 50% each step
+NUM_COLS <- 20
+
+# File paths in container
+TEST_DIR <- "/home/cdsw"
+DATA_DIR <- file.path(TEST_DIR, "test_data")
+if (!dir.exists(DATA_DIR)) dir.create(DATA_DIR, recursive = TRUE)
+
+# Results storage
+breaking_point_results <- list()
+
+# Utility functions
 format_bytes <- function(bytes) {
   units <- c('B', 'KB', 'MB', 'GB', 'TB')
   i <- 1
