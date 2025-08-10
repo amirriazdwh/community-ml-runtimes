@@ -1,174 +1,528 @@
-cp Dockerfile ../cloudera_community/community-ml-runtimes/rstudio/
+# ================================================================
+# RStudio Server Docker Commands - HIGH-PERFORMANCE OPTIMIZED
+# ================================================================
+# Purpose: Docker operations for RStudio Server 2025.x OPTIMIZATION
+# Environment: 28GB RAM, 8 CPU cores, Enterprise-grade configuration
+# Optimizations: Global system limits, R JIT compilation, Arrow/data.table
+# Multi-user: cdsw (sudo), dev1, dev2 with shared global optimizations
+# Date: August 2025
+# ================================================================
 
-docker build -t peterableda/rstudio-cloudera-runtime:2025.05-r4.4 -t peterableda/rstudio-cloudera-runtime:latest .
+# ================================================================
+# 1. OPTIMIZED IMAGE BUILDING
+# ================================================================
 
-docker run -d \
-  --name rstudio-cdsw \
-  -p 8090:8090 \
-  peterableda/rstudio-cloudera-runtime:2025.05-r4.4
-
-docker run --rm -it peterableda/rstudio-cloudera-runtime:2025.05-r4.4 R --version
-
-docker run -d \
-  --name rstudio-cdsw \
-   -p 8090:8090 \
-  peterableda/rstudio-cloudera-runtime:2025.05-r4.4 \
-  /usr/local/bin/ml-runtime-editor
-
-docker run -d -p 8090:8090 --name rstudio-cdsw peterableda/rstudio-cloudera-runtime:2025.05-r4.4 \
-  /usr/local/bin/ml-runtime-editor \
-  --server-daemonize=0 \
-  --www-port=8090 \
-  --www-address=0.0.0.0 \
-  --www-use-secure-cookie=0
-
-
+# RECOMMENDED: Build Latest Optimized Image (R 4.5.1 + All Optimizations)
+cd /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1
 docker build \
-  -t peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1 \
+  --progress=plain \
+  --no-cache \
+  -t peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1-optimized \
   -t peterableda/rstudio-cloudera-runtime:latest \
   .
 
-docker run -d -p 8090:8787 --name rstudio-cdsw peterableda/rstudio-cloudera-runtime:2025.05-r4.4 \
-  /usr/local/bin/ml-runtime-editor
-
-################################
-docker run -d -p 8090:8090 --name rstudio-cdsw peterableda/rstudio-cloudera-runtime:2025.05-r4.4 \
-  /usr/local/bin/ml-runtime-editor
-###################################
-
-docker logs rstudio-cdsw
-
-docker stop $(docker ps -q)
-docker rm -f $(docker ps -aq)
-docker rmi -f $(docker images -q)
-docker builder prune -af
-docker system prune -af --volumes
-
-docker stop $(docker ps -q) && \
-docker rm -f $(docker ps -aq) && \
-docker rmi -f $(docker images -q) && \
-docker system prune -af --volumes
-
-docker builder prune -af
-
-http://172.25.243.196:8090/
-
-##################
-# testing
-#####################
-docker exec -it rstudio-server bash
-docker run -it --entrypoint /bin/bash peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
-
-
-netstat -tulnp | grep 8787
-
-cat /home/cdsw/.local/share/rstudio/log/rserver.log
-
-rm -f /home/cdsw/.local/share/rstudio/log/rserver.log
-
-docker exec -it rstudio-cdsw bash
-ps aux | grep rserver
-
-cat /etc/rstudio/rserver.conf
-ls -ld /etc/rstudio
-ls -l /etc/rstudio/rserver.conf
-
-cat /var/log/rstudio-server.log
-
-
-Updating HTML index of packages in '.Library'
-Warning in install.packages :
-  cannot create file '/usr/local/lib/R/doc/html/packages.html', reason 'Permission denied'
-Warning in install.packages :
-  cannot update HTML package index
-
-
-docker run -d -p 8787:8787 --name rstudio-server peterableda/rstudio-cloudera-runtime:2025.05-r4.4
-
-docker run -it --entrypoint /bin/bash rstudio-server
-
-docker run -it --rm --entrypoint /bin/bash peterableda/rstudio-cloudera-runtime:2025.05-r4.4
-
-git restore /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/Dockerfile
-git log /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/Dockerfile
-git checkout 3d6df5df5ac5469f7aff01995d0e5b704320779b /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/Dockerfile
-
-docker run -d \
-  --user cdsw \
-  --name=rstudio-server \
-  --memory=28g \
-  -p 8787:8787 \
-  -v mydata:/home  \
-  peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
-
-  docker run -it \
-  --name rstudio-server \
-  -p 8787:8787 \
-  peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1 \
-  /bin/bash
-
-
-  docker build \
-  -t peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1 \
+# Build with Build Arguments (if needed)
+docker build \
+  --build-arg R_VERSION=4.5.1 \
+  --build-arg RSTUDIO_VERSION=2025.05.1-513 \
+  --build-arg OPTIMIZE=true \
+  --progress=plain \
+  -t peterableda/rstudio-cloudera-runtime:latest \
   .
 
+# Quick Rebuild (with cache)
+docker build -t peterableda/rstudio-cloudera-runtime:latest .
 
-  fix
-  /usr/lib/rstudio-server/bin/rsession --version
-sed -i 's/2025.05.1+513/2025.05.1-513/' /usr/lib/rstudio-server/bin/rsession
+# Legacy R 4.4 build (not recommended)
+# docker build -t peterableda/rstudio-cloudera-runtime:2025.05-r4.4 .
 
+# ================================================================
+# 2. HIGH-PERFORMANCE CONTAINER DEPLOYMENT
+# ================================================================
 
-# 1. Create the user 'dev1' with home directory and bash shell
-useradd -m -s /bin/bash dev1
-
-# 2. Set password for 'dev1' to 'dev1'
-echo "dev1:dev1" | chpasswd
-
-# 3. Add 'dev1' to group 'cdsw'
-usermod -aG cdsw dev1
-
-# 4. (Optional) Copy default bash configs
-cp /etc/skel/.bash* /home/dev1/
-chown -R dev1:dev1 /home/dev1
-
+# 🚀 PRODUCTION: Maximum Performance Optimized Container
+# All system optimizations, global configurations, multi-user ready
 docker run -d \
-  --name=rstudio-server \
-  --memory=28g \
+  --name rstudio-optimized \
+  --hostname rstudio-optimized \
   -p 8787:8787 \
-  peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
+  --memory=28g \
+  --memory-swap=28g \
+  --cpus="8" \
+  --cpu-shares=1024 \
+  --shm-size=4g \
+  --tmpfs /tmp:size=8g,exec,nodev,nosuid \
+  --ulimit nofile=65535:65535 \
+  --ulimit nproc=32768:32768 \
+  --ulimit memlock=-1:-1 \
+  --ulimit stack=67108864:67108864 \
+  --cap-add=SYS_NICE \
+  --cap-add=SYS_RESOURCE \
+  --security-opt seccomp=unconfined \
+  --env R_ENABLE_JIT=3 \
+  --env OMP_NUM_THREADS=8 \
+  --env OPENBLAS_NUM_THREADS=8 \
+  --env MKL_NUM_THREADS=8 \
+  --env ARROW_DEFAULT_MEMORY_POOL=system \
+  --env ARROW_USE_THREADING=true \
+  --restart unless-stopped \
+  peterableda/rstudio-cloudera-runtime:latest
 
-
+# 📊 DEVELOPMENT: High-Performance with Volume Mounts
 docker run -d \
-  --name=rstudio-server \
+  --name rstudio-dev \
+  --hostname rstudio-dev \
+  -p 8787:8787 \
   --memory=28g \
-  -p 8787:8787 \
-  -v mydata:/home \
-  peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1
+  --cpus="8" \
+  --shm-size=4g \
+  --tmpfs /tmp:size=8g,exec \
+  --ulimit nofile=65535:65535 \
+  --ulimit nproc=32768:32768 \
+  --ulimit memlock=-1:-1 \
+  --env R_ENABLE_JIT=3 \
+  --env OMP_NUM_THREADS=8 \
+  --env ARROW_DEFAULT_MEMORY_POOL=system \
+  -v $(pwd)/data:/home/shared/data:rw \
+  -v $(pwd)/projects:/home/shared/projects:rw \
+  peterableda/rstudio-cloudera-runtime:latest
 
-  docker run -it \
-  --name rstudio-server \
-  -p 8787:8787 \
-  peterableda/rstudio-cloudera-runtime:2025.05-r4.5.1 \
-  bash
+# 🧪 TESTING: Resource-Limited for Testing
+docker run -d \
+  --name rstudio-test \
+  -p 8788:8787 \
+  --memory=8g \
+  --cpus="2" \
+  --shm-size=1g \
+  --ulimit nofile=32768:32768 \
+  --env R_ENABLE_JIT=2 \
+  peterableda/rstudio-cloudera-runtime:latest
 
-ps aux | grep rserver
+# ⚡ STRESS TESTING: Maximum Resources for Performance Testing
+docker run -d \
+  --name rstudio-stress \
+  --hostname rstudio-stress \
+  -p 8789:8787 \
+  --memory=28g \
+  --memory-swap=32g \
+  --cpus="8" \
+  --cpu-shares=2048 \
+  --shm-size=8g \
+  --tmpfs /tmp:size=16g,exec \
+  --ulimit nofile=131072:131072 \
+  --ulimit nproc=65536:65536 \
+  --ulimit memlock=-1:-1 \
+  --cap-add=SYS_NICE \
+  --cap-add=SYS_RESOURCE \
+  --cap-add=IPC_LOCK \
+  --security-opt seccomp=unconfined \
+  --env R_ENABLE_JIT=3 \
+  --env R_COMPILE_PKGS=1 \
+  --env R_DISABLE_HTTPD=1 \
+  --env OMP_NUM_THREADS=8 \
+  --env OPENBLAS_NUM_THREADS=8 \
+  --env MKL_NUM_THREADS=8 \
+  --env ARROW_DEFAULT_MEMORY_POOL=system \
+  --env ARROW_USE_THREADING=true \
+  --env ARROW_IO_THREADS=8 \
+  peterableda/rstudio-cloudera-runtime:latest
 
-docker logs rstudio-cdsw
+# ================================================================
+# 3. ADVANCED DEVELOPMENT & DEBUGGING
+# ================================================================
 
-docker stop $(docker ps -q)
-docker rm -f $(docker ps -aq)
-docker rmi -f $(docker images -q)
-docker builder prune -af
-docker system prune -af --volumes
+# 🔧 Interactive Shell Access (Production Container)
+docker exec -it rstudio-optimized bash
+docker exec -u cdsw -it rstudio-optimized bash
+docker exec -u dev1 -it rstudio-optimized bash
+docker exec -u dev2 -it rstudio-optimized bash
 
+# 🔬 Root Access for System Administration
+docker exec -u root -it rstudio-optimized bash
+
+# 🧪 Interactive Development Container
+docker run -it --rm \
+  --name rstudio-debug \
+  -p 8790:8787 \
+  --memory=28g \
+  --cpus="8" \
+  --shm-size=4g \
+  --ulimit nofile=65535:65535 \
+  --env R_ENABLE_JIT=3 \
+  --entrypoint /bin/bash \
+  peterableda/rstudio-cloudera-runtime:latest
+
+# 📊 R Console Direct Access
+docker exec -u cdsw -it rstudio-optimized R
+docker exec -u cdsw -it rstudio-optimized Rscript --version
+
+# 🧮 Quick R Commands
+docker exec -u cdsw rstudio-optimized R -e "sessionInfo()"
+docker exec -u cdsw rstudio-optimized R -e "parallel::detectCores()"
+docker exec -u cdsw rstudio-optimized R -e "Sys.getenv('R_ENABLE_JIT')"
+docker exec -u cdsw rstudio-optimized R -e "memory.limit()"
+
+# 📦 Package Version Checks
+docker exec -u cdsw rstudio-optimized R -e "packageVersion('arrow')"
+docker exec -u cdsw rstudio-optimized R -e "packageVersion('data.table')"
+docker exec -u cdsw rstudio-optimized R -e "installed.packages()[,'Version']"
+
+# ================================================================
+# 4. COMPREHENSIVE MONITORING & DIAGNOSTICS
+# ================================================================
+
+# 📋 Container Status and Resources
+docker stats rstudio-optimized --no-stream
+docker stats rstudio-optimized --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}"
+
+# 📜 Container Logs (Real-time and Historical)
+docker logs -f rstudio-optimized
+docker logs --tail 100 rstudio-optimized
+docker logs --since 1h rstudio-optimized
+
+# 🔍 System Process Monitoring
+docker exec -it rstudio-optimized ps aux | grep -E "(rserver|rsession|R)"
+docker exec -it rstudio-optimized top -p $(docker exec rstudio-optimized pgrep rserver)
+docker exec -it rstudio-optimized htop
+
+# 🌐 Network and Port Monitoring
+docker exec -it rstudio-optimized netstat -tulnp | grep 8787
+docker exec -it rstudio-optimized ss -tulnp | grep 8787
+docker port rstudio-optimized
+
+# 💾 Memory and Resource Usage
+docker exec -it rstudio-optimized free -h
+docker exec -it rstudio-optimized df -h
+docker exec -it rstudio-optimized iostat 1 5
+docker exec -it rstudio-optimized vmstat 1 5
+
+# 📊 R Session Monitoring
+docker exec -u cdsw rstudio-optimized R -e "gc(); cat('Memory usage:', format(object.size(ls(all=TRUE)), units='MB'), '\n')"
+docker exec -u cdsw rstudio-optimized R -e "system('ps aux | grep rsession')"
+
+# 🔧 RStudio Server Logs and Configuration
+docker exec -it rstudio-optimized cat /var/log/rstudio-server.log
+docker exec -it rstudio-optimized tail -f /var/log/rstudio-server.log
+docker exec -it rstudio-optimized cat /var/lib/rstudio-server/audit/r-sessions.log
+docker exec -it rstudio-optimized cat /home/cdsw/.local/share/rstudio/log/rserver.log
+
+# ⚙️ Configuration File Verification
+docker exec -it rstudio-optimized cat /etc/rstudio/rserver.conf
+docker exec -it rstudio-optimized cat /etc/rstudio/rsession.conf
+docker exec -it rstudio-optimized cat /etc/security/limits.conf | grep -v "^#"
+docker exec -it rstudio-optimized ulimit -a
+
+# 📊 Verify rsession.conf optimizations are applied
+docker exec -u cdsw rstudio-optimized R -e "Sys.getenv('R_MAX_MEM_SIZE')"
+docker exec -u cdsw rstudio-optimized R -e "Sys.getenv('R_NSIZE')"
+docker exec -u cdsw rstudio-optimized R -e "Sys.getenv('R_VSIZE')"
+
+# 🔍 Container Inspection
+docker inspect rstudio-optimized | jq '.[0].Config.Env'
+docker inspect rstudio-optimized | jq '.[0].HostConfig.Memory'
+docker inspect rstudio-optimized | jq '.[0].HostConfig.CpuShares'
+
+# ================================================================
+# 5. ENTERPRISE TROUBLESHOOTING & PERFORMANCE FIXES
+# ================================================================
+
+# 🔧 RStudio Version Format Fix (if needed)
+docker exec -it rstudio-optimized sed -i 's/2025.05.1+513/2025.05.1-513/' /usr/lib/rstudio-server/bin/rsession
+
+# 🗑️ Clear RStudio Logs and Reset
+docker exec -it rstudio-optimized rm -f /var/log/rstudio-server.log
+docker exec -it rstudio-optimized rm -f /home/cdsw/.local/share/rstudio/log/rserver.log
+docker exec -it rstudio-optimized rm -f /home/dev1/.local/share/rstudio/log/rserver.log
+docker exec -it rstudio-optimized rm -f /home/dev2/.local/share/rstudio/log/rserver.log
+
+# 🔄 Restart RStudio Server Service
+docker exec -it rstudio-optimized supervisorctl restart rstudio-server
+docker exec -it rstudio-optimized systemctl restart rstudio-server
+
+# 👥 Multi-User Setup and Management
+# Create dev1 user with optimizations
+docker exec -it rstudio-optimized useradd -m -s /bin/bash -u 8537 dev1
+docker exec -it rstudio-optimized bash -c "echo 'dev1:dev1' | chpasswd"
+docker exec -it rstudio-optimized usermod -aG cdsw dev1
+docker exec -it rstudio-optimized bash -c "cp /etc/skel/.bash* /home/dev1/ && chown -R dev1:dev1 /home/dev1"
+
+# Create dev2 user with optimizations  
+docker exec -it rstudio-optimized useradd -m -s /bin/bash -u 8538 dev2
+docker exec -it rstudio-optimized bash -c "echo 'dev2:dev2' | chpasswd"
+docker exec -it rstudio-optimized usermod -aG cdsw dev2
+docker exec -it rstudio-optimized bash -c "cp /etc/skel/.bash* /home/dev2/ && chown -R dev2:dev2 /home/dev2"
+
+# 🔒 Set up sudo access for cdsw
+docker exec -it rstudio-optimized bash -c "echo 'cdsw ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers"
+
+# 📁 Create shared directories with proper permissions
+docker exec -it rstudio-optimized mkdir -p /home/shared/{data,projects,packages}
+docker exec -it rstudio-optimized chown -R cdsw:cdsw /home/shared
+docker exec -it rstudio-optimized chmod -R 775 /home/shared
+
+# ⚡ Performance Optimization Verification
+docker exec -it rstudio-optimized bash -c "ulimit -n && ulimit -u && ulimit -l"
+docker exec -u cdsw rstudio-optimized R -e "Sys.getenv(c('R_ENABLE_JIT', 'OMP_NUM_THREADS', 'ARROW_DEFAULT_MEMORY_POOL'))"
+
+# 🧹 Memory Cleanup and Optimization
+docker exec -u cdsw rstudio-optimized R -e "gc(full=TRUE); .rs.restartR()"
+docker exec -it rstudio-optimized sync && echo 3 > /proc/sys/vm/drop_caches
+
+# ================================================================
+# 6. ENTERPRISE R PACKAGE MANAGEMENT
+# ================================================================
+
+# 🌐 Global Package Installation (All Users Benefit)
+# Recommended approach for enterprise environments
+docker exec -it rstudio-optimized R -e "install.packages('PACKAGE_NAME', lib='/usr/local/lib/R/site-library', dependencies=TRUE)"
+
+# 📊 High-Performance Packages Installation
+# Arrow for fast data processing
+docker exec -it rstudio-optimized R -e "install.packages('arrow', lib='/usr/local/lib/R/site-library')"
+
+# data.table for fast data manipulation  
+docker exec -it rstudio-optimized R -e "install.packages('data.table', lib='/usr/local/lib/R/site-library')"
+
+# Parallel processing packages
+docker exec -it rstudio-optimized R -e "install.packages(c('parallel', 'foreach', 'doParallel'), lib='/usr/local/lib/R/site-library')"
+
+# Popular data science packages
+docker exec -it rstudio-optimized R -e "install.packages(c('dplyr', 'ggplot2', 'tidyr', 'readr'), lib='/usr/local/lib/R/site-library')"
+
+# Machine learning packages
+docker exec -it rstudio-optimized R -e "install.packages(c('caret', 'randomForest', 'xgboost'), lib='/usr/local/lib/R/site-library')"
+
+# 👤 User-Specific Package Installation
+docker exec -u cdsw rstudio-optimized R -e "install.packages('PACKAGE_NAME')"
+docker exec -u dev1 rstudio-optimized R -e "install.packages('PACKAGE_NAME')"
+docker exec -u dev2 rstudio-optimized R -e "install.packages('PACKAGE_NAME')"
+
+# 🔍 Package Management and Verification
+# List installed packages globally
+docker exec -it rstudio-optimized R -e "installed.packages(lib='/usr/local/lib/R/site-library')[,c('Package','Version')]"
+
+# Check package locations
+docker exec -u cdsw rstudio-optimized R -e ".libPaths()"
+
+# Update all packages globally
+docker exec -it rstudio-optimized R -e "update.packages(lib='/usr/local/lib/R/site-library', ask=FALSE)"
+
+# 🧪 Package Testing and Benchmarking
+# Test Arrow performance
+docker exec -u cdsw rstudio-optimized R -e "library(arrow); arrow::arrow_info()"
+
+# Test data.table performance
+docker exec -u cdsw rstudio-optimized R -e "library(data.table); test.data.table()"
+
+# Test parallel processing
+docker exec -u cdsw rstudio-optimized R -e "library(parallel); detectCores()"
+
+# ================================================================
+# 7. SMART CLEANUP & MAINTENANCE OPERATIONS
+# ================================================================
+
+# 🔄 Graceful Container Management
+# Stop specific container gracefully
+docker stop rstudio-optimized
+docker stop rstudio-dev rstudio-test rstudio-stress
+
+# Remove specific containers
+docker rm rstudio-optimized
+docker rm rstudio-dev rstudio-test rstudio-stress
+
+# 🧹 Selective Cleanup (Recommended for Production)
+# Stop only RStudio containers
+docker ps --filter "name=rstudio" --format "{{.Names}}" | xargs -r docker stop
+
+# Remove only stopped RStudio containers
+docker ps -a --filter "name=rstudio" --filter "status=exited" --format "{{.Names}}" | xargs -r docker rm
+
+# Remove unused images (keep base images)
+docker images --filter "dangling=true" -q | xargs -r docker rmi
+
+# 🔄 Container Restart and Update
+# Restart container with same configuration
+docker restart rstudio-optimized
+
+# Update and restart (preserves data in volumes)
+docker pull peterableda/rstudio-cloudera-runtime:latest
+docker stop rstudio-optimized
+docker rm rstudio-optimized
+# Then run the production deployment command again
+
+# 💾 Backup and Restore Operations
+# Backup container state
+docker commit rstudio-optimized rstudio-backup:$(date +%Y%m%d)
+
+# Export container filesystem
+docker export rstudio-optimized > rstudio-backup-$(date +%Y%m%d).tar
+
+# Create volume backup
+docker run --rm -v rstudio-data:/data -v $(pwd):/backup ubuntu tar czf /backup/rstudio-data-backup.tar.gz -C /data .
+
+# ⚠️ DESTRUCTIVE OPERATIONS (Use with Caution)
+# Complete system cleanup - REMOVES EVERYTHING
 docker stop $(docker ps -q) && \
 docker rm -f $(docker ps -aq) && \
 docker rmi -f $(docker images -q) && \
 docker system prune -af --volumes
 
+# Aggressive cleanup (removes build cache)
 docker builder prune -af
+docker system prune -af --volumes
 
-sudo R -e "install.packages('sf')" → Root's personal library (not useful)
-sudo R -e "install.packages('sf', lib='/usr/local/lib/R/site-library')" → Global library (everyone benefits)
-R -e "install.packages('sf')" → User's personal library (only that user)
+# ================================================================
+# 8. GIT OPERATIONS (Dockerfile management)
+# ================================================================
 
+# Restore Dockerfile to previous version
+git restore /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/Dockerfile
+
+# View Dockerfile history
+git log /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/Dockerfile
+
+# Checkout specific commit
+git checkout 3d6df5df5ac5469f7aff01995d0e5b704320779b /home/amirriaz/cloudera_community/community-ml-runtimes/rstudio/R4.5.1/Dockerfile
+
+# ================================================================
+# 9. ACCESS INFORMATION
+# ================================================================
+
+# Local Access URLs
+# http://localhost:8787
+# http://172.25.243.196:8787 (if using specific IP)
+
+# Default Credentials:
+# Username: cdsw
+# Password: cdsw
+
+# Additional Users (if created):
+# Username: dev1, Password: dev1
+# Username: dev2, Password: dev2
+
+# ================================================================
+# 10. PERFORMANCE TESTING & BENCHMARKING
+# ================================================================
+
+# 🧪 Run Built-in Stress Tests
+# Execute comprehensive stress test suite
+docker exec -u cdsw rstudio-optimized bash -c "cd /home/shared && bash /home/cdsw/Testing/run_all_tests.sh"
+
+# Run simple stress test
+docker exec -u cdsw rstudio-optimized Rscript /home/cdsw/simple_stress_test.R
+
+# Run comprehensive stress test
+docker exec -u cdsw rstudio-optimized Rscript /home/cdsw/comprehensive_stress_test.R
+
+# Generate 10GB test dataset
+docker exec -u cdsw rstudio-optimized Rscript -e "
+library(data.table)
+data <- data.table(
+  id = 1:10000000,
+  value = rnorm(10000000),
+  category = sample(letters[1:5], 10000000, replace=TRUE)
+)
+fwrite(data, '/tmp/stress_test.csv')
+cat('File size:', file.size('/tmp/stress_test.csv') / 1024^3, 'GB\n')
+"
+
+# ⚡ Performance Monitoring During Tests
+# Monitor real-time resource usage during stress tests
+docker stats rstudio-optimized --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}"
+
+# Monitor R session performance
+docker exec -u cdsw rstudio-optimized R -e "
+system.time({
+  library(arrow)
+  library(data.table)
+  cat('System ready for performance testing\n')
+})
+"
+
+# ================================================================
+# 11. ENTERPRISE DEPLOYMENT SCRIPTS & ALIASES
+# ================================================================
+
+# 🚀 Production Deployment (Save as aliases in ~/.bashrc)
+alias rstudio-deploy='docker run -d --name rstudio-optimized --hostname rstudio-optimized -p 8787:8787 --memory=28g --memory-swap=28g --cpus="8" --cpu-shares=1024 --shm-size=4g --tmpfs /tmp:size=8g,exec,nodev,nosuid --ulimit nofile=65535:65535 --ulimit nproc=32768:32768 --ulimit memlock=-1:-1 --ulimit stack=67108864:67108864 --cap-add=SYS_NICE --cap-add=SYS_RESOURCE --security-opt seccomp=unconfined --env R_ENABLE_JIT=3 --env OMP_NUM_THREADS=8 --env OPENBLAS_NUM_THREADS=8 --env MKL_NUM_THREADS=8 --env ARROW_DEFAULT_MEMORY_POOL=system --env ARROW_USE_THREADING=true --restart unless-stopped peterableda/rstudio-cloudera-runtime:latest'
+
+# Quick access commands
+alias rstudio-shell='docker exec -it rstudio-optimized bash'
+alias rstudio-cdsw='docker exec -u cdsw -it rstudio-optimized bash'
+alias rstudio-r='docker exec -u cdsw -it rstudio-optimized R'
+alias rstudio-logs='docker logs -f rstudio-optimized'
+alias rstudio-stats='docker stats rstudio-optimized --no-stream'
+
+# Maintenance commands
+alias rstudio-restart='docker restart rstudio-optimized'
+alias rstudio-stop='docker stop rstudio-optimized'
+alias rstudio-remove='docker stop rstudio-optimized && docker rm rstudio-optimized'
+
+# Monitoring commands
+alias rstudio-monitor='docker exec -it rstudio-optimized htop'
+alias rstudio-processes='docker exec -it rstudio-optimized ps aux | grep -E "(rserver|rsession|R)"'
+alias rstudio-memory='docker exec -it rstudio-optimized free -h'
+
+# Package management
+alias rstudio-packages='docker exec -it rstudio-optimized R -e "installed.packages()[,c(\"Package\",\"Version\")]"'
+alias rstudio-update='docker exec -it rstudio-optimized R -e "update.packages(ask=FALSE)"'
+
+# ================================================================
+# 12. PRODUCTION CHECKLIST & VERIFICATION
+# ================================================================
+
+# ✅ Post-Deployment Verification Commands
+echo "=== RStudio Optimized Container Verification ==="
+
+# 1. Container Status
+docker ps --filter "name=rstudio-optimized" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+# 2. Resource Allocation Verification
+docker inspect rstudio-optimized | jq -r '.[]|{Memory:.HostConfig.Memory, CPUs:.HostConfig.NanoCpus, ShmSize:.HostConfig.ShmSize}'
+
+# 3. Environment Variables Check
+docker exec rstudio-optimized env | grep -E "(R_ENABLE_JIT|OMP_NUM_THREADS|ARROW_)"
+
+# 4. System Limits Verification
+docker exec rstudio-optimized bash -c "ulimit -n; ulimit -u; ulimit -l"
+
+# 5. RStudio Server Status
+docker exec rstudio-optimized pgrep -f rserver || echo "RStudio Server not running"
+
+# 6. Multi-user Authentication Test
+docker exec rstudio-optimized id cdsw
+docker exec rstudio-optimized id dev1 2>/dev/null || echo "dev1 user not created"
+docker exec rstudio-optimized id dev2 2>/dev/null || echo "dev2 user not created"
+
+# 7. Package Availability Check
+docker exec -u cdsw rstudio-optimized R -e "packageVersion('arrow'); packageVersion('data.table')"
+
+# 8. Performance Test Quick Check
+docker exec -u cdsw rstudio-optimized R -e "system.time(parallel::detectCores())"
+
+# ================================================================
+# 🎯 ACCESS INFORMATION & CREDENTIALS
+# ================================================================
+
+# 🌐 Access URLs:
+# Primary: http://localhost:8787
+# Alternative: http://YOUR_HOST_IP:8787
+# Development: http://localhost:8787 (if using rstudio-dev)
+# Testing: http://localhost:8788 (if using rstudio-test)
+# Stress: http://localhost:8789 (if using rstudio-stress)
+
+# 👥 Default Credentials:
+# Primary User: cdsw / cdsw (with sudo access)
+# Dev User 1: dev1 / dev1 (standard user)  
+# Dev User 2: dev2 / dev2 (standard user)
+
+# 📊 Performance Specifications:
+# - Memory: 28GB allocated with swap
+# - CPU: 8 cores with priority scheduling
+# - Storage: 4GB shared memory + 8GB tmpfs
+# - Optimizations: R JIT level 3, Arrow threading, OpenBLAS
+# - Networking: Optimized for high-throughput data operations
+
+# ================================================================
+# END OF ENTERPRISE DOCKER COMMANDS REFERENCE
+# ================================================================

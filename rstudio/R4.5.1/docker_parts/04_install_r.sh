@@ -82,23 +82,76 @@ mkdir -p /usr/local/lib/R/site-library
 chmod -R a+w /usr/local/lib/R/site-library
 
 cat <<EOF > /usr/local/lib/R/etc/Rprofile.site
+# Global R configuration for ALL users
+# This applies automatically to every R session
+
+# CRAN repository
 options(
   repos = c(CRAN = '${CRAN}'),
-  scipen = 999,
+  download.file.method = 'libcurl',
+  timeout = 300
+)
+
+# Display and output settings
+options(
+  max.print = 10000,
+  scipen = 6,
   digits = 4,
   width = 120,
+  menu.graphics = FALSE,
+  browserNLdisabled = TRUE,
+  crayon.enabled = TRUE,
   tidyverse.quiet = TRUE,
   warn = 1
 )
+
+# Graphics settings
 bitmapType = "cairo"
+
+# Performance settings - use all available cores
+if (requireNamespace("parallel", quietly = TRUE)) {
+  options(
+    mc.cores = parallel::detectCores(),
+    Ncpus = parallel::detectCores()
+  )
+}
+
+# Global startup message for interactive sessions
+if (interactive()) {
+  cat('RStudio Server - Global optimizations active\\n')
+  if (requireNamespace("parallel", quietly = TRUE)) {
+    cat('Available CPU cores:', parallel::detectCores(), '\\n')
+  }
+  cat('Graphics device: cairo\\n')
+}
 EOF
 
 cat <<EOF > /usr/local/lib/R/etc/Renviron.site
 R_VERSION='${R_VERSION}'
+
+# Performance optimizations
 R_ENABLE_JIT=3
 R_COMPILE_PKGS=1
+
+# Memory and parallel processing
+R_GC_MEM_GROW=3
+R_NSIZE=500000
+R_VSIZE=15000000
+
+# Library paths
 R_LIBS_USER='/usr/local/lib/R/site-library'
+R_LIBS_SITE='/usr/local/lib/R/site-library'
+
+# System paths
 PATH=\${PATH}:/usr/local/lib/R/bin
+
+# Graphics and display
+R_BROWSER='false'
+R_PDFVIEWER='false'
+
+# Network and downloads
+R_DOWNLOAD_FILE_METHOD='libcurl'
+R_TIMEOUT=300
 EOF
 
 # Ensure correct ownership for multi-user setup (rstudio-users group)
@@ -125,12 +178,3 @@ Rscript -e "install.packages(c('Cairo', 'svglite', 'ragg', 'ggplot2', 'gridExtra
 
 
 echo "✅ R ${R_VERSION} installation complete with headless graphics and LaTeX."
-
-# # Core graphics, math, and font libraries (X11 dependencies removed)
-# apt-get update && apt-get install -y --no-install-recommends \
-#   libcairo2-dev libjpeg-dev libtiff5-dev libpng-dev \
-#   libfontconfig1-dev libfreetype6-dev librsvg2-dev \
-#   texlive texlive-latex-base texlive-latex-extra \
-#   texlive-fonts-recommended texlive-pictures \
-#   texinfo ghostscript libopenblas-dev && \
-#   apt-get clean && rm -rf /var/lib/apt/lists/*

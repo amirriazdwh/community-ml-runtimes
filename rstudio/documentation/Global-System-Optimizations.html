@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global System Optimizations - RStudio Server</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #00b894;
+        }
+
+        .header h1 {
+            color: #00b894;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            font-style: italic;
+        }
+
+        .overview-banner {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.3);
+        }
+
+        .config-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 5px solid #00b894;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .section-number {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .section-title {
+            display: inline-block;
+            vertical-align: top;
+            margin-top: 8px;
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', Monaco, monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .code-title {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px 8px 0 0;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+
+        .code-title + .code-block {
+            margin-top: 0;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .benefit-item {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            box-shadow: 0 3px 10px rgba(0, 184, 148, 0.3);
+        }
+
+        .benefit-item:before {
+            content: "✅ ";
+            font-weight: bold;
+        }
+
+        .key-benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .benefit-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #2196f3;
+            box-shadow: 0 3px 10px rgba(33, 150, 243, 0.2);
+        }
+
+        .benefit-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .status-table th {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .status-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        .status-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .status-table tr:hover {
+            background-color: #e8f5e8;
+            transition: background-color 0.3s ease;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .status-applied {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+
+        .status-ready {
+            background: linear-gradient(135deg, #ff9800 0%, #ef6c00 100%);
+        }
+
+        .note-box {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffecb3 100%);
+            border-left: 4px solid #ff9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(255, 152, 0, 0.2);
+        }
+
+        .verification-section {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .next-steps {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border-left: 4px solid #4caf50;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .step-number {
+            background: #4caf50;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .result-banner {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        h2 {
+            color: #00b894;
+            font-size: 1.8em;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #00b894;
+        }
+
+        h3 {
+            color: #333;
+            font-size: 1.4em;
+            margin: 20px 0 10px 0;
+        }
+
+        h4 {
+            color: #555;
+            font-size: 1.2em;
+            margin: 15px 0 8px 0;
+            font-weight: 600;
+        }
+
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #00b894;
+            text-align: center;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .benefits-grid,
+            .key-benefits {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Global System Optimizations</h1>
+            <div class="subtitle">RStudio Server - Universal Configuration</div>
+        </div>
+
+        <div class="overview-banner">
+            <h2>🎯 All optimizations now apply globally to ALL users without requiring individual user configuration</h2>
+        </div>
+
+        <div class="config-section">
+            <div class="section-number">1</div>
+            <div class="section-title">Global File Descriptor Limits</div>
+            
+            <p><strong>File:</strong> <code>/etc/security/limits.conf</code></p>
+
+            <div class="code-title">Global Resource Limits</div>
+            <div class="code-block"># Global resource limits for all users
+# These apply automatically to ALL users without individual entries
+
+# Global file descriptor limits (applies to ALL users)
+* soft nofile 65535
+* hard nofile 65535
+
+# Global process limits (applies to ALL users)  
+* soft nproc 32768
+* hard nproc 32768
+
+# Global memory limits
+* soft memlock unlimited
+* hard memlock unlimited
+
+# Global core dump settings
+* soft core 0
+* hard core unlimited</div>
+
+            <div class="benefits-grid">
+                <div class="benefit-item">Applies to ALL existing and future users automatically</div>
+                <div class="benefit-item">No need to add individual user entries</div>
+                <div class="benefit-item">Scalable for any number of users</div>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <div class="section-number">2</div>
+            <div class="section-title">Systemd Global Limits</div>
+
+            <div class="code-title">User Services Limits - /etc/systemd/user.conf.d/limits.conf</div>
+            <div class="code-block">[Manager]
+# Global limits for all user services
+DefaultLimitNOFILE=65535
+DefaultLimitNPROC=32768
+DefaultLimitCORE=0
+DefaultLimitMEMLOCK=infinity</div>
+
+            <div class="code-title">System Services Limits - /etc/systemd/system.conf.d/limits.conf</div>
+            <div class="code-block">[Manager]
+# Global limits for all system services
+DefaultLimitNOFILE=65535
+DefaultLimitNPROC=32768
+DefaultLimitCORE=0
+DefaultLimitMEMLOCK=infinity</div>
+        </div>
+
+        <div class="config-section">
+            <div class="section-number">3</div>
+            <div class="section-title">PAM Configuration</div>
+
+            <p><strong>Files:</strong> <code>/etc/pam.d/common-session*</code></p>
+
+            <div class="code-title">PAM Integration</div>
+            <div class="code-block">session required pam_limits.so</div>
+
+            <p><strong>Purpose:</strong> Ensures limits.conf is enforced for all login sessions.</p>
+        </div>
+
+        <div class="config-section">
+            <div class="section-number">4</div>
+            <div class="section-title">RStudio Server Global Configuration</div>
+
+            <p><strong>File:</strong> <code>/etc/rstudio/rserver.conf</code></p>
+
+            <div class="code-title">Global Performance Optimizations</div>
+            <div class="code-block"># === Global Performance Optimizations ===
+
+# Session management (applies to ALL users)
+session-timeout-minutes=0
+session-disconnect-on-suspend=0
+session-quit-child-processes-on-exit=1
+
+# Resource limits (global - no per-user limits needed)
+session-memory-limit-mb=0
+session-cpu-limit-percent=0
+
+# Security and performance
+server-app-armor-enabled=0
+server-set-umask=0
+
+# Logging optimizations
+monitor-log-level=warn</div>
+        </div>
+
+        <div class="config-section">
+            <div class="section-number">5</div>
+            <div class="section-title">Global R Configuration</div>
+
+            <p><strong>File:</strong> <code>/etc/R/Rprofile.site</code></p>
+
+            <div class="code-title">R Global Configuration</div>
+            <div class="code-block"># Global R configuration for ALL users
+# This applies automatically to every R session
+
+# CRAN repository
+options(
+  repos = c(CRAN = 'https://cloud.r-project.org/'),
+  download.file.method = 'libcurl',
+  timeout = 300
+)
+
+# Performance settings - use all available cores
+options(
+  warn = 1,
+  mc.cores = parallel::detectCores(),
+  Ncpus = parallel::detectCores()
+)</div>
+        </div>
+
+        <div class="config-section">
+            <div class="section-number">6</div>
+            <div class="section-title">Kernel-Level Optimizations</div>
+
+            <p><strong>File:</strong> <code>/etc/sysctl.conf</code></p>
+
+            <div class="code-title">Kernel Optimizations</div>
+            <div class="code-block"># === RStudio Server Global Optimizations ===
+
+# File system optimizations (global for all users)
+fs.file-max = 2097152
+fs.nr_open = 2097152
+fs.inotify.max_user_watches = 524288
+
+# Memory management optimizations
+vm.swappiness = 10
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+
+# Process and threading limits
+kernel.pid_max = 4194304
+kernel.threads-max = 4194304</div>
+
+            <div class="note-box">
+                <strong>Note:</strong> These require host-level application (Docker limitations prevent container-level sysctl changes)
+            </div>
+        </div>
+
+        <div class="verification-section">
+            <h2>🔍 Verification Commands</h2>
+            <div class="code-title">System Verification</div>
+            <div class="code-block"># Check global limits for any user
+docker exec -u [username] rstudio-server bash -c "ulimit -n; ulimit -u"
+
+# Verify PAM configuration
+docker exec rstudio-server grep pam_limits /etc/pam.d/common-session*
+
+# Check R global configuration
+docker exec -u [username] rstudio-server R --slave -e "getOption('mc.cores')"
+
+# Verify systemd limits
+docker exec rstudio-server cat /etc/systemd/user.conf.d/limits.conf</div>
+        </div>
+
+        <h2>🎯 Key Benefits</h2>
+
+        <div class="key-benefits">
+            <div class="benefit-card">
+                <div class="benefit-title">✅ Scalability</div>
+                <ul>
+                    <li><strong>No per-user configuration needed</strong></li>
+                    <li>Automatically applies to new users</li>
+                    <li>Single point of configuration management</li>
+                </ul>
+            </div>
+
+            <div class="benefit-card">
+                <div class="benefit-title">✅ Maintenance</div>
+                <ul>
+                    <li>All settings in standard system configuration files</li>
+                    <li>Easy to update globally</li>
+                    <li>Version control friendly</li>
+                </ul>
+            </div>
+
+            <div class="benefit-card">
+                <div class="benefit-title">✅ Performance</div>
+                <ul>
+                    <li>Optimal file descriptor limits for all users</li>
+                    <li>Global R performance settings</li>
+                    <li>Efficient resource utilization</li>
+                </ul>
+            </div>
+
+            <div class="benefit-card">
+                <div class="benefit-title">✅ Consistency</div>
+                <ul>
+                    <li>Same optimizations for all users</li>
+                    <li>Uniform experience across the system</li>
+                    <li>Predictable behavior</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>📊 Implementation Status</h2>
+
+        <table class="status-table">
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Status</th>
+                    <th>File Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Global File Limits</strong></td>
+                    <td><span class="status-badge status-applied">✅ Applied</span></td>
+                    <td><code>/etc/security/limits.conf</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Systemd Limits</strong></td>
+                    <td><span class="status-badge status-applied">✅ Applied</span></td>
+                    <td><code>/etc/systemd/*/limits.conf</code></td>
+                </tr>
+                <tr>
+                    <td><strong>PAM Integration</strong></td>
+                    <td><span class="status-badge status-applied">✅ Applied</span></td>
+                    <td><code>/etc/pam.d/common-session*</code></td>
+                </tr>
+                <tr>
+                    <td><strong>RStudio Config</strong></td>
+                    <td><span class="status-badge status-applied">✅ Applied</span></td>
+                    <td><code>/etc/rstudio/rserver.conf</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Global R Config</strong></td>
+                    <td><span class="status-badge status-applied">✅ Applied</span></td>
+                    <td><code>/etc/R/Rprofile.site</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Kernel Limits</strong></td>
+                    <td><span class="status-badge status-ready">⚠️ Ready</span></td>
+                    <td><code>/etc/sysctl.conf</code> (host-level)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="next-steps">
+            <h2>📋 Next Steps</h2>
+            
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <div><strong>Test with any user</strong> - All optimizations are global</div>
+            </div>
+            
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <div><strong>Add new users</strong> - They automatically inherit all optimizations</div>
+            </div>
+            
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <div><strong>Apply kernel settings</strong> - At Docker host level for maximum effect</div>
+            </div>
+            
+            <div class="step-item">
+                <div class="step-number">4</div>
+                <div><strong>Monitor performance</strong> - All users benefit from the same optimizations</div>
+            </div>
+        </div>
+
+        <div class="result-banner">
+            <h2>🎉 Result</h2>
+            <p><strong>The system now has global optimizations that apply to ALL users automatically without individual configuration!</strong></p>
+        </div>
+
+        <div class="footer">
+            <p><strong>Global System Optimizations - RStudio Server</strong></p>
+            <p>Universal Configuration | No Per-User Setup Required | Scalable Architecture</p>
+        </div>
+    </div>
+</body>
+</html>

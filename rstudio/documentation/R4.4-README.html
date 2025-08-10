@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RStudio Editor for CML Runtimes (R4.4)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #74b9ff;
+        }
+
+        .header h1 {
+            color: #74b9ff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            font-style: italic;
+        }
+
+        .version-badge {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            display: inline-block;
+            margin: 20px 0;
+            box-shadow: 0 3px 10px rgba(0, 184, 148, 0.3);
+        }
+
+        .description-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 5px solid #74b9ff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .screenshot-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-radius: 12px;
+            border-left: 4px solid #e17055;
+        }
+
+        .screenshot-placeholder {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 40px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            text-align: center;
+            margin: 15px 0;
+            border: 3px dashed #4a5568;
+        }
+
+        .registry-section {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            border-left: 4px solid #4caf50;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 3px 10px rgba(76, 175, 80, 0.2);
+        }
+
+        .registry-section h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .registry-url {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', Monaco, monospace;
+            font-size: 1.1em;
+            text-align: center;
+            margin: 15px 0;
+            border-left: 4px solid #4caf50;
+        }
+
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .resource-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #2196f3;
+            box-shadow: 0 3px 10px rgba(33, 150, 243, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .resource-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .resource-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .resource-icon {
+            margin-right: 10px;
+            font-size: 1.5em;
+        }
+
+        .resource-link {
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .resource-link:hover {
+            color: #0d47a1;
+            text-decoration: underline;
+        }
+
+        .features-section {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffecb3 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: rgba(255,255,255,0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #ff9800;
+        }
+
+        .feature-item h4 {
+            color: #ef6c00;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .feature-item h4:before {
+            content: "🎯 ";
+            margin-right: 5px;
+        }
+
+        .tech-specs {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .spec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .spec-item {
+            background: rgba(255,255,255,0.8);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 3px solid #9c27b0;
+        }
+
+        .spec-label {
+            font-weight: bold;
+            color: #7b1fa2;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .spec-value {
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 5px 15px rgba(116, 185, 255, 0.3);
+        }
+
+        .cta-title {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            font-weight: 300;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .cta-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .cta-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        h2 {
+            color: #74b9ff;
+            font-size: 1.8em;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #74b9ff;
+        }
+
+        h3 {
+            color: #333;
+            font-size: 1.4em;
+            margin: 20px 0 10px 0;
+        }
+
+        p {
+            margin: 15px 0;
+            text-align: justify;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #74b9ff;
+            text-align: center;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .resources-grid,
+            .features-grid,
+            .spec-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>RStudio Editor for CML Runtimes</h1>
+            <div class="subtitle">Professional R Development Environment</div>
+            <div class="version-badge">R4.4 Edition</div>
+        </div>
+
+        <div class="description-section">
+            <p>This directory contains the comprehensive scripts and configurations needed to build a Machine Learning Runtime that uses <strong>RStudio 2023.12.1-402</strong> as the integrated development environment in Cloudera Machine Learning (CML).</p>
+            <p>Built upon the robust foundation of the PBJ Workbench R4.3 image, this runtime provides a seamless, professional-grade R development experience within the CML ecosystem.</p>
+        </div>
+
+        <div class="tech-specs">
+            <h2>🔧 Technical Specifications</h2>
+            <div class="spec-grid">
+                <div class="spec-item">
+                    <span class="spec-label">RStudio Version</span>
+                    <span class="spec-value">2023.12.1-402</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">R Version</span>
+                    <span class="spec-value">R4.4</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Base Image</span>
+                    <span class="spec-value">PBJ Workbench R4.3</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Platform</span>
+                    <span class="spec-value">Cloudera ML</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="screenshot-container">
+            <h3>🖥️ RStudio Interface Preview</h3>
+            <div class="screenshot-placeholder">
+                📸 RStudio 2023.12.1 running in CML
+                <br><br>
+                <small>(RStudio-screenshot.png)</small>
+            </div>
+            <p><em>Professional RStudio interface seamlessly integrated with Cloudera Machine Learning platform</em></p>
+        </div>
+
+        <div class="registry-section">
+            <h3>🚀 Prebuilt Container Available</h3>
+            <p>A ready-to-use prebuilt version has been uploaded to the GitHub Container Registry for immediate deployment:</p>
+            <div class="registry-url">
+                ghcr.io/ogakulov/rstudio-2023.12:latest
+            </div>
+            <p>This container includes all necessary components and optimizations for production-ready R development in CML environments.</p>
+        </div>
+
+        <div class="features-section">
+            <h2>✨ Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <h4>Integrated Development Environment</h4>
+                    <p>Full RStudio IDE experience within CML platform</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Optimized Performance</h4>
+                    <p>Enhanced configuration for machine learning workflows</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Seamless Integration</h4>
+                    <p>Native compatibility with CML runtime system</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Production Ready</h4>
+                    <p>Enterprise-grade stability and security features</p>
+                </div>
+            </div>
+        </div>
+
+        <h2>📚 Documentation & Resources</h2>
+
+        <div class="resources-grid">
+            <div class="resource-card">
+                <div class="resource-title">
+                    <span class="resource-icon">📖</span>
+                    Cloudera Community Article
+                </div>
+                <p>Comprehensive guide on implementing RStudio as an editor with ML Runtimes in CML.</p>
+                <a href="https://community.cloudera.com/t5/Community-Articles/Using-RStudio-as-an-Editor-with-ML-Runtimes/ta-p/325166" class="resource-link" target="_blank">
+                    View Implementation Guide →
+                </a>
+            </div>
+
+            <div class="resource-card">
+                <div class="resource-title">
+                    <span class="resource-icon">📋</span>
+                    Official CML Documentation
+                </div>
+                <p>Official Cloudera documentation for managing ML Runtimes in CML platform.</p>
+                <a href="https://docs.cloudera.com/machine-learning/cloud/runtimes/topics/ml-runtimes-overview.html" class="resource-link" target="_blank">
+                    CML Runtimes Overview →
+                </a>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <div class="cta-title">Ready to Get Started?</div>
+            <p>Deploy this RStudio runtime in your CML environment and unlock the full potential of R-based machine learning development.</p>
+            <div class="cta-buttons">
+                <a href="https://community.cloudera.com/t5/Community-Articles/Using-RStudio-as-an-Editor-with-ML-Runtimes/ta-p/325166" class="cta-button" target="_blank">
+                    📖 Read Setup Guide
+                </a>
+                <a href="https://docs.cloudera.com/machine-learning/cloud/runtimes/topics/ml-runtimes-overview.html" class="cta-button" target="_blank">
+                    📋 View CML Docs
+                </a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>RStudio Editor for CML Runtimes (R4.4)</strong></p>
+            <p>Professional R Development | Cloudera Machine Learning | Enterprise Ready</p>
+        </div>
+    </div>
+</body>
+</html>

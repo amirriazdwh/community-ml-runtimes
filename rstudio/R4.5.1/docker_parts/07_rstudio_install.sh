@@ -28,21 +28,6 @@ head -c 512 /dev/urandom > /etc/rstudio/secure-cookie-key
 chmod 0600 /etc/rstudio/secure-cookie-key
 chown root:rstudio-users /etc/rstudio/secure-cookie-key
 
-# Increase file descriptor limits for all users
-cat <<EOF >> /etc/security/limits.conf
-cdsw soft nofile 65535
-cdsw hard nofile 65535
-dev1 soft nofile 65535
-dev1 hard nofile 65535
-dev2 soft nofile 65535
-dev2 hard nofile 65535
-* soft nofile 65535
-* hard nofile 65535
-EOF
-
-# Enable PAM limits
-echo "session required pam_limits.so" >> /etc/pam.d/common-session
-
 # Strip unnecessary symbols to reduce image size
 strip /usr/lib/rstudio-server/bin/rserver /usr/lib/rstudio-server/bin/rsession || true
 rm -rf /usr/lib/rstudio-server/www/help

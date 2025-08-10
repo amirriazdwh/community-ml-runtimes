@@ -61,8 +61,8 @@ RUN mkdir -p /var/log/rstudio-server /var/log/rstudio-sessions && \
 # 08: RStudio rserver.conf configuration
 COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
 
-# 08: RStudio rsession.conf configuration  
-#COPY docker_parts/08_rsession.conf /etc/rstudio/rsession.conf
+# 08: RStudio rsession.conf configuration (OPTIMIZED VERSION)
+COPY docker_parts/08_rsession.conf /etc/rstudio/rsession.conf
 
 # 08: Post-installed packages
 # COPY docker_parts/08_r_postinstall_packages.sh /tmp/docker_parts/08_r_postinstall_packages.sh

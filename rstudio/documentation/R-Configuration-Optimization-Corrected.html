@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R Configuration Optimization - Corrected Placement</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #e17055 0%, #d63031 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #e17055;
+        }
+
+        .header h1 {
+            color: #e17055;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            font-style: italic;
+        }
+
+        .problem-banner {
+            background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
+            border-left: 4px solid #f44336;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 3px 10px rgba(244, 67, 54, 0.2);
+        }
+
+        .problem-banner h2 {
+            color: #d32f2f;
+            margin-bottom: 10px;
+        }
+
+        .solution-banner {
+            background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
+            border-left: 4px solid #4caf50;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 3px 10px rgba(76, 175, 80, 0.2);
+        }
+
+        .solution-banner h2 {
+            color: #388e3c;
+            margin-bottom: 10px;
+        }
+
+        .config-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 5px solid #e17055;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .location-badge {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .location-badge.wrong {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', Monaco, monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .code-title {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px 8px 0 0;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+
+        .code-title + .code-block {
+            margin-top: 0;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .removed-section {
+            background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
+            border-left: 4px solid #f44336;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .removed-section h4:before {
+            content: "❌ ";
+            color: #d32f2f;
+            font-weight: bold;
+        }
+
+        .improvements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .improvement-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #2196f3;
+            box-shadow: 0 3px 10px rgba(33, 150, 243, 0.2);
+        }
+
+        .improvement-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .improvement-title:before {
+            content: "✅ ";
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #e17055 0%, #d63031 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .comparison-table tr:hover {
+            background-color: #fff3e0;
+            transition: background-color 0.3s ease;
+        }
+
+        .stage-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .stage-correct {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+
+        .stage-correct:before {
+            content: "✅ ";
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .benefit-card {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffecb3 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #ff9800;
+            box-shadow: 0 3px 10px rgba(255, 152, 0, 0.2);
+        }
+
+        .benefit-number {
+            background: #ff9800;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .verification-section {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .result-banner {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .result-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .result-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .result-list li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        h2 {
+            color: #e17055;
+            font-size: 1.8em;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e17055;
+        }
+
+        h3 {
+            color: #333;
+            font-size: 1.4em;
+            margin: 20px 0 10px 0;
+        }
+
+        h4 {
+            color: #555;
+            font-size: 1.2em;
+            margin: 15px 0 8px 0;
+            font-weight: 600;
+        }
+
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #e17055;
+            text-align: center;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .improvements-grid,
+            .benefits-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>R Configuration Optimization</h1>
+            <div class="subtitle">Corrected Placement & Enhanced Performance</div>
+        </div>
+
+        <div class="problem-banner">
+            <h2>🎯 Problem Identified</h2>
+            <p>The R-specific global optimizations were placed in the wrong Docker build stage (post-install packages) instead of the R installation stage where they belong.</p>
+        </div>
+
+        <div class="solution-banner">
+            <h2>✅ Solution Implemented</h2>
+            <p>R configurations moved to the correct build stage with enhanced performance settings and proper location structure.</p>
+        </div>
+
+        <div class="config-section">
+            <div class="location-badge">✅ CORRECT LOCATION</div>
+            <h3>R Install Stage (<code>04_install_r.sh</code>)</h3>
+
+            <h4>Enhanced Rprofile.site (<code>/usr/local/lib/R/etc/Rprofile.site</code>)</h4>
+            <div class="code-title">Global R Configuration</div>
+            <div class="code-block"># Global R configuration for ALL users
+# This applies automatically to every R session
+
+# CRAN repository
+options(
+  repos = c(CRAN = '${CRAN}'),
+  download.file.method = 'libcurl',
+  timeout = 300
+)
+
+# Display and output settings
+options(
+  max.print = 10000,
+  scipen = 6,
+  digits = 4,
+  width = 120,
+  menu.graphics = FALSE,
+  browserNLdisabled = TRUE,
+  crayon.enabled = TRUE,
+  tidyverse.quiet = TRUE,
+  warn = 1
+)
+
+# Graphics settings
+bitmapType = "cairo"
+
+# Performance settings - use all available cores
+if (requireNamespace("parallel", quietly = TRUE)) {
+  options(
+    mc.cores = parallel::detectCores(),
+    Ncpus = parallel::detectCores()
+  )
+}
+
+# Global startup message for interactive sessions
+if (interactive()) {
+  cat('RStudio Server - Global optimizations active\n')
+  if (requireNamespace("parallel", quietly = TRUE)) {
+    cat('Available CPU cores:', parallel::detectCores(), '\n')
+  }
+  cat('Graphics device: cairo\n')
+}</div>
+
+            <h4>Enhanced Renviron.site (<code>/usr/local/lib/R/etc/Renviron.site</code>)</h4>
+            <div class="code-title">R Environment Variables</div>
+            <div class="code-block">R_VERSION='${R_VERSION}'
+
+# Performance optimizations
+R_ENABLE_JIT=3
+R_COMPILE_PKGS=1
+
+# Memory and parallel processing
+R_GC_MEM_GROW=3
+R_NSIZE=500000
+R_VSIZE=15000000
+
+# Library paths
+R_LIBS_USER='/usr/local/lib/R/site-library'
+R_LIBS_SITE='/usr/local/lib/R/site-library'
+
+# System paths
+PATH=${PATH}:/usr/local/lib/R/bin
+
+# Graphics and display
+R_BROWSER='false'
+R_PDFVIEWER='false'
+
+# Network and downloads
+R_DOWNLOAD_FILE_METHOD='libcurl'
+R_TIMEOUT=300</div>
+        </div>
+
+        <div class="config-section">
+            <div class="location-badge wrong">❌ CLEANED UP</div>
+            <h3>R Post-Install Stage (<code>08_r_postinstall_packages.sh</code>)</h3>
+
+            <div class="removed-section">
+                <h4>Removed Duplicate Code:</h4>
+                <div class="code-title">Removed Configuration</div>
+                <div class="code-block"># REMOVED: Duplicate R configuration
+# This was creating /etc/R/Rprofile.site which would conflict
+# with the proper location /usr/local/lib/R/etc/Rprofile.site</div>
+            </div>
+        </div>
+
+        <h2>📋 Key Improvements</h2>
+
+        <div class="improvements-grid">
+            <div class="improvement-card">
+                <div class="improvement-title">Proper R Configuration Location</div>
+                <ul>
+                    <li><strong>Correct:</strong> <code>/usr/local/lib/R/etc/Rprofile.site</code> (standard R location)</li>
+                    <li><strong>Incorrect:</strong> <code>/etc/R/Rprofile.site</code> (system-wide but not R-specific)</li>
+                </ul>
+            </div>
+
+            <div class="improvement-card">
+                <div class="improvement-title">No Duplication</div>
+                <ul>
+                    <li>R configuration set once in R install stage</li>
+                    <li>No conflicting configurations</li>
+                    <li>Proper build order dependency</li>
+                </ul>
+            </div>
+
+            <div class="improvement-card">
+                <div class="improvement-title">Enhanced Performance Settings</div>
+                <ul>
+                    <li><strong>JIT Compilation:</strong> <code>R_ENABLE_JIT=3</code> (maximum optimization)</li>
+                    <li><strong>Memory Management:</strong> Optimized garbage collection and memory limits</li>
+                    <li><strong>Parallel Processing:</strong> Auto-detection of available cores</li>
+                    <li><strong>Graphics:</strong> Cairo device for high-quality graphics</li>
+                    <li><strong>Network:</strong> Optimized download settings</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>✅ Proper Build Stage Separation</h3>
+
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Stage</th>
+                    <th>Purpose</th>
+                    <th>R Configuration</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>04_install_r.sh</strong></td>
+                    <td><span class="stage-badge stage-correct">R installation + core config</span></td>
+                    <td>Rprofile.site + Renviron.site</td>
+                </tr>
+                <tr>
+                    <td><strong>08_r_postinstall_packages.sh</strong></td>
+                    <td><span class="stage-badge stage-correct">R package installation only</span></td>
+                    <td>No R config (cleaned up)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>🎯 Benefits of Correct Placement</h2>
+
+        <div class="benefits-grid">
+            <div class="benefit-card">
+                <div class="benefit-number">1</div>
+                <h4>Logical Organization</h4>
+                <ul>
+                    <li>R configuration lives with R installation</li>
+                    <li>Post-install focuses purely on packages</li>
+                    <li>Clear separation of concerns</li>
+                </ul>
+            </div>
+
+            <div class="benefit-card">
+                <div class="benefit-number">2</div>
+                <h4>Proper Dependencies</h4>
+                <ul>
+                    <li>R configuration applied immediately after R is built</li>
+                    <li>Available for all subsequent package installations</li>
+                    <li>No timing issues or conflicts</li>
+                </ul>
+            </div>
+
+            <div class="benefit-card">
+                <div class="benefit-number">3</div>
+                <h4>Standard R Locations</h4>
+                <ul>
+                    <li>Uses R's standard configuration directories</li>
+                    <li>Follows R installation best practices</li>
+                    <li>Compatible with R's configuration hierarchy</li>
+                </ul>
+            </div>
+
+            <div class="benefit-card">
+                <div class="benefit-number">4</div>
+                <h4>Enhanced Performance</h4>
+                <ul>
+                    <li>Comprehensive memory optimizations</li>
+                    <li>JIT compilation enabled at maximum level</li>
+                    <li>Parallel processing auto-configured</li>
+                    <li>Graphics optimizations included</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="verification-section">
+            <h2>🔍 Verification</h2>
+            <p>After Docker build, these configurations will be active:</p>
+            <div class="code-title">Verification Commands</div>
+            <div class="code-block"># Check R configuration location
+docker exec container ls -la /usr/local/lib/R/etc/
+
+# Test R global settings
+docker exec -u [user] container R --slave -e "getOption('mc.cores')"
+docker exec -u [user] container R --slave -e "getOption('repos')"
+
+# Verify graphics device
+docker exec -u [user] container R --slave -e "getOption('bitmapType')"
+
+# Check environment variables
+docker exec -u [user] container R --slave -e "Sys.getenv('R_ENABLE_JIT')"</div>
+        </div>
+
+        <div class="result-banner">
+            <h2>🎉 Result</h2>
+            <p>The R optimizations are now:</p>
+            <ul class="result-list">
+                <li><strong>Properly placed</strong> in the R installation stage</li>
+                <li><strong>Non-duplicated</strong> across build stages</li>
+                <li><strong>Comprehensively optimized</strong> with performance settings</li>
+                <li><strong>Following R best practices</strong> for configuration placement</li>
+            </ul>
+            <p style="margin-top: 20px; font-size: 1.2em;"><strong>Perfect foundation for high-performance R computing in RStudio Server! 🚀</strong></p>
+        </div>
+
+        <div class="footer">
+            <p><strong>R Configuration Optimization - Corrected Placement</strong></p>
+            <p>Enhanced Performance | Proper Build Stage | R Best Practices</p>
+        </div>
+    </div>
+</body>
+</html>
