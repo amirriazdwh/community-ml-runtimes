@@ -1,0 +1,111 @@
+/* RStudio Server Dark Login Theme */
+/* Place this file in /etc/rstudio/login.css or customize in container */
+
+/* Main login container */
+.login-wrapper {
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Login form styling */
+.login-form {
+    background: rgba(30, 30, 50, 0.9);
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    max-width: 400px;
+    width: 100%;
+}
+
+/* Header styling */
+.login-header {
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 24px;
+    font-weight: 300;
+}
+
+/* Input fields */
+.login-input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid #555;
+    border-radius: 6px;
+    padding: 12px;
+    color: #ffffff;
+    width: 100%;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.login-input:focus {
+    outline: none;
+    border-color: #4a9eff;
+    box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+.login-input::placeholder {
+    color: #aaa;
+}
+
+/* Labels */
+.login-label {
+    color: #cccccc;
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* Sign in button */
+.login-button {
+    background: linear-gradient(135deg, #4a9eff 0%, #0066cc 100%);
+    border: none;
+    border-radius: 6px;
+    padding: 12px 24px;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-button:hover {
+    background: linear-gradient(135deg, #5aa6ff 0%, #0070dd 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+}
+
+/* Checkbox styling */
+.login-checkbox {
+    color: #cccccc;
+    font-size: 12px;
+    margin: 15px 0;
+}
+
+/* Footer text */
+.login-footer {
+    color: #888;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* RStudio logo area */
+.logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Body override for full dark theme */
+body {
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}

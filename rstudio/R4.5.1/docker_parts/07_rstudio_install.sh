@@ -28,6 +28,11 @@ head -c 512 /dev/urandom > /etc/rstudio/secure-cookie-key
 chmod 0600 /etc/rstudio/secure-cookie-key
 chown root:rstudio-users /etc/rstudio/secure-cookie-key
 
+# Install custom dark theme for login page
+echo "🎨 Installing custom dark theme for RStudio login..."
+mkdir -p /etc/rstudio/www/css
+mkdir -p /etc/rstudio/templates
+
 # Strip unnecessary symbols to reduce image size
 strip /usr/lib/rstudio-server/bin/rserver /usr/lib/rstudio-server/bin/rsession || true
 rm -rf /usr/lib/rstudio-server/www/help
