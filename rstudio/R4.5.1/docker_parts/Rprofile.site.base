@@ -1,0 +1,42 @@
+# R Profile Site Configuration - Base Configuration
+# This file is created in 04_install_r.sh and should be the foundation
+# Other scripts should source separate files to avoid conflicts
+
+# CRAN repository
+options(
+  repos = c(CRAN = '${CRAN}'),
+  HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os)),
+  stringsAsFactors = FALSE
+)
+
+# Performance settings
+options(
+  Ncpus = parallel::detectCores(),
+  warn = 1,
+  max.print = 1000,
+  scipen = 999
+)
+
+# Memory management
+options(
+  expressions = 500000,
+  keep.source = TRUE,
+  keep.source.pkgs = TRUE
+)
+
+# Data analysis defaults
+options(
+  dplyr.summarise.inform = FALSE,
+  readr.show_col_types = FALSE
+)
+
+# Load additional R profile configurations
+tryCatch({
+  # Source additional configurations from modular files
+  config_files <- list.files("/usr/local/lib/R/etc/profiles.d/", pattern = "\\.R$", full.names = TRUE)
+  for (file in config_files) {
+    source(file)
+  }
+}, error = function(e) {
+  # Silently continue if no additional configs
+})

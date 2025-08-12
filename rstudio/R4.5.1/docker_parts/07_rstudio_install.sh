@@ -28,11 +28,6 @@ head -c 512 /dev/urandom > /etc/rstudio/secure-cookie-key
 chmod 0600 /etc/rstudio/secure-cookie-key
 chown root:rstudio-users /etc/rstudio/secure-cookie-key
 
-# Install custom dark theme for login page
-echo "🎨 Installing custom dark theme for RStudio login..."
-mkdir -p /etc/rstudio/www/css
-mkdir -p /etc/rstudio/templates
-
 # Strip unnecessary symbols to reduce image size
 strip /usr/lib/rstudio-server/bin/rserver /usr/lib/rstudio-server/bin/rsession || true
 rm -rf /usr/lib/rstudio-server/www/help
@@ -69,8 +64,8 @@ Rscript -e "install.packages(c('reticulate', 'rPython'), repos=Sys.getenv('CRAN'
 Rscript -e "webshot::install_phantomjs()" || echo "⚠️ PhantomJS installation failed"
 # Note: Using system LaTeX instead of tinytex to avoid conflicts
 
-# Set bitmapType to 'cairo' for all R sessions
-echo "options(bitmapType='cairo')" >> /usr/local/lib/R/etc/Rprofile.site
+# Set bitmapType to 'cairo' for all R sessions (via modular config)
+cp /tmp/docker_parts/rstudio-config.R /usr/local/lib/R/etc/profiles.d/
 
 # ===============================
 # === Create RStudio User Preferences (JSON Format for 2025.x) ===
@@ -148,50 +143,14 @@ echo "✅ Global RStudio preferences configured for all users"
 # ================================
 echo "🐍 Configuring Python integration..."
 
-# Set global Python path in R environment
-echo "RETICULATE_PYTHON=/usr/bin/python3" >> /usr/local/lib/R/etc/Renviron.site
-
-# Add environment variables to prevent config directory creation issues
-echo "R_USER_CONFIG_DIR=/tmp/r-config" >> /usr/local/lib/R/etc/Renviron.site
-echo "RSTUDIO_CONFIG_HOME=/tmp/rstudio-config" >> /usr/local/lib/R/etc/Renviron.site
+# Note: Python environment variables are now set in 04_install_r.sh Renviron.site
 
 # Create fallback config directories with proper permissions
 mkdir -p /tmp/r-config /tmp/rstudio-config
 chmod 777 /tmp/r-config /tmp/rstudio-config
 
-# Create R startup script to handle config directory issues
-cat > /usr/local/lib/R/etc/Rprofile.site << 'RPROFILE'
-# Global R profile to handle config directory issues
-local({
-  # Function to safely create config directory
-  safe_config_dir <- function() {
-    tryCatch({
-      # Try user's home first
-      user_config <- file.path(Sys.getenv("HOME"), ".config")
-      if (dir.exists(dirname(user_config)) && file.access(dirname(user_config), 2) == 0) {
-        if (!dir.exists(user_config)) {
-          dir.create(user_config, recursive = TRUE, mode = "0755")
-        }
-        return(user_config)
-      }
-      # Fall back to temp directory
-      temp_config <- "/tmp/rstudio-config"
-      if (!dir.exists(temp_config)) {
-        dir.create(temp_config, recursive = TRUE, mode = "0777")
-      }
-      return(temp_config)
-    }, error = function(e) {
-      # Final fallback
-      return(tempdir())
-    })
-  }
-  
-  # Set up config directory environment
-  config_dir <- safe_config_dir()
-  Sys.setenv(R_USER_CONFIG_DIR = config_dir)
-  Sys.setenv(RSTUDIO_CONFIG_HOME = config_dir)
-})
-RPROFILE
+# Add config directory handling to modular R profile system
+cp /tmp/docker_parts/config-handling.R /usr/local/lib/R/etc/profiles.d/
 
 # Ensure user directories have proper permissions for RStudio configuration
 echo "🔧 Setting up user directory permissions..."

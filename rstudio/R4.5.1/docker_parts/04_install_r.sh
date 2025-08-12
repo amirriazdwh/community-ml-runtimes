@@ -18,7 +18,7 @@ echo "🔧 Installing system dependencies for R ${R_VERSION} with graphics and L
 apt-get update && apt-get install -y --no-install-recommends \
     libcairo2-dev libjpeg-dev libtiff5-dev libpng-dev \
     libfontconfig1-dev libfreetype6-dev librsvg2-dev \
-    libharfbuzz-dev libfribidi-dev \
+    libharfbuzz-dev libfribidi-dev gettext-base \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 📚 Stage 4: LaTeX and PDF rendering toolchain (for R Markdown, Quarto)
@@ -81,77 +81,63 @@ rm -rf /tmp/R* /tmp/R-${R_VERSION}
 mkdir -p /usr/local/lib/R/site-library
 chmod -R a+w /usr/local/lib/R/site-library
 
-cat <<EOF > /usr/local/lib/R/etc/Rprofile.site
-# Global R configuration for ALL users
-# This applies automatically to every R session
+# Create modular R profile configuration directory
+mkdir -p /usr/local/lib/R/etc/profiles.d
 
-# CRAN repository
-options(
-  repos = c(CRAN = '${CRAN}'),
-  download.file.method = 'libcurl',
-  timeout = 300
-)
-
-# Display and output settings
-options(
-  max.print = 10000,
-  scipen = 6,
-  digits = 4,
-  width = 120,
-  menu.graphics = FALSE,
-  browserNLdisabled = TRUE,
-  crayon.enabled = TRUE,
-  tidyverse.quiet = TRUE,
-  warn = 1
-)
-
-# Graphics settings
-bitmapType = "cairo"
-
-# Performance settings - use all available cores
-if (requireNamespace("parallel", quietly = TRUE)) {
-  options(
-    mc.cores = parallel::detectCores(),
-    Ncpus = parallel::detectCores()
-  )
-}
-
-# Global startup message for interactive sessions
-if (interactive()) {
-  cat('RStudio Server - Global optimizations active\\n')
-  if (requireNamespace("parallel", quietly = TRUE)) {
-    cat('Available CPU cores:', parallel::detectCores(), '\\n')
-  }
-  cat('Graphics device: cairo\\n')
-}
-EOF
+# Copy and process the base Rprofile.site configuration with variable substitution
+envsubst < /tmp/docker_parts/Rprofile.site.base > /usr/local/lib/R/etc/Rprofile.site
 
 cat <<EOF > /usr/local/lib/R/etc/Renviron.site
+# R Version Information
 R_VERSION='${R_VERSION}'
 
 # Performance optimizations
 R_ENABLE_JIT=3
 R_COMPILE_PKGS=1
 
-# Memory and parallel processing
+# Memory and parallel processing (balanced settings)
 R_GC_MEM_GROW=3
-R_NSIZE=500000
-R_VSIZE=15000000
+R_NSIZE=350000
+R_VSIZE=8000000
 
 # Library paths
 R_LIBS_USER='/usr/local/lib/R/site-library'
 R_LIBS_SITE='/usr/local/lib/R/site-library'
 
-# System paths
-PATH=\${PATH}:/usr/local/lib/R/bin
+# System paths (fixed PATH escaping)
+PATH="\${PATH}:/usr/local/bin"
 
-# Graphics and display
+# Graphics and display (headless configuration with Cairo)
 R_BROWSER='false'
 R_PDFVIEWER='false'
+R_DEVICE='cairo'
 
 # Network and downloads
 R_DOWNLOAD_FILE_METHOD='libcurl'
 R_TIMEOUT=300
+R_ZIPCMD='/usr/bin/zip'
+R_UNZIPCMD='/usr/bin/unzip'
+
+# Python integration (for RStudio and reticulate)
+RETICULATE_PYTHON='/usr/bin/python3'
+
+# Config directory handling (for RStudio)
+R_USER_CONFIG_DIR='/tmp/r-config'
+RSTUDIO_CONFIG_HOME='/tmp/rstudio-config'
+
+# Additional R environment variables
+R_HISTSIZE=2000
+R_DEFAULT_PACKAGES='datasets,utils,grDevices,graphics,stats,methods'
+R_PROFILE_USER='/dev/null'
+
+# LaTeX and document processing
+R_LATEXCMD='/usr/bin/pdflatex'
+R_MAKEINDEXCMD='/usr/bin/makeindex'
+R_DVIPSCMD='/usr/bin/dvips'
+
+# Platform and architecture information
+R_PLATFORM='x86_64-pc-linux-gnu'
+R_ARCH=''
 EOF
 
 # Ensure correct ownership for multi-user setup (rstudio-users group)

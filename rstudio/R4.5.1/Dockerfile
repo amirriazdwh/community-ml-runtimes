@@ -33,6 +33,7 @@ RUN test -f /tmp/docker_parts/03_create_user.sh && chmod +x /tmp/docker_parts/03
 
 # 04: Install R from source
 COPY docker_parts/04_install_r.sh /tmp/docker_parts/04_install_r.sh
+COPY docker_parts/Rprofile.site.base /tmp/docker_parts/Rprofile.site.base
 RUN test -f /tmp/docker_parts/04_install_r.sh && chmod +x /tmp/docker_parts/04_install_r.sh && /tmp/docker_parts/04_install_r.sh
 
 # 06: Banking packages
@@ -48,6 +49,8 @@ RUN test -f /tmp/docker_parts/05_set_r_memory.sh && mv /tmp/docker_parts/05_set_
 
 # 07: RStudio server installation and configuration
 COPY docker_parts/07_rstudio_install.sh /tmp/docker_parts/07_rstudio_install.sh
+COPY docker_parts/rstudio-config.R /tmp/docker_parts/rstudio-config.R
+COPY docker_parts/config-handling.R /tmp/docker_parts/config-handling.R
 RUN test -f /tmp/docker_parts/07_rstudio_install.sh && chmod +x /tmp/docker_parts/07_rstudio_install.sh && /tmp/docker_parts/07_rstudio_install.sh
 
 # Create RStudio-specific log directories with proper permissions (after RStudio install)
