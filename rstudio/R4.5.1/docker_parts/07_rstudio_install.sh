@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
 RSTUDIO_VERSION=2025.05.1-513
 # Download and install RStudio Server
@@ -64,16 +64,12 @@ Rscript -e "install.packages(c('reticulate', 'rPython'), repos=Sys.getenv('CRAN'
 Rscript -e "webshot::install_phantomjs()" || echo "⚠️ PhantomJS installation failed"
 # Note: Using system LaTeX instead of tinytex to avoid conflicts
 
-# Set bitmapType to 'cairo' for all R sessions (via modular config)
-mkdir -p /usr/local/lib/R/etc/profiles.d
-cp /tmp/docker_parts/rstudio-config.R /usr/local/lib/R/etc/profiles.d/
-chown root:rstudio-users /usr/local/lib/R/etc/profiles.d/rstudio-config.R
-chmod 644 /usr/local/lib/R/etc/profiles.d/rstudio-config.R
+# RStudio modular R config is installed by the Dockerfile under /usr/local/lib/R/etc/profiles.d
 
 # ===============================
 # === Create RStudio User Preferences (JSON Format for 2025.x) ===
 # ===============================
-echo "� Creating global RStudio preferences for all users..."
+echo "Creating global RStudio preferences for all users..."
 
 # Create system-wide RStudio configuration directory
 mkdir -p /etc/rstudio

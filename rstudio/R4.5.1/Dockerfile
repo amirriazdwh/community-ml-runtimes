@@ -114,11 +114,12 @@ RUN test -f /tmp/docker_parts/05_set_r_memory.sh && mv /tmp/docker_parts/05_set_
 # 07: RStudio server installation and configuration
 ########################################################
 COPY docker_parts/07_rstudio_install.sh /tmp/docker_parts/07_rstudio_install.sh
-COPY docker_parts/rstudio-config.R /tmp/docker_parts/rstudio-config.R
-#COPY docker_parts/config-handling.R /tmp/docker_parts/config-handling.R
 RUN test -f /tmp/docker_parts/07_rstudio_install.sh && chmod +x /tmp/docker_parts/07_rstudio_install.sh && /tmp/docker_parts/07_rstudio_install.sh
 
+
 # Ensure the profiles.d directory exists
+COPY docker_parts/rstudio-config.R /tmp/docker_parts/rstudio-config.R
+
 RUN mkdir -p /usr/local/lib/R/etc/profiles.d && \
     cp /tmp/docker_parts/rstudio-config.R /usr/local/lib/R/etc/profiles.d/ && \
     chown -R root:rstudio-users /usr/local/lib/R/etc/profiles.d && \
@@ -139,7 +140,6 @@ RUN mkdir -p /var/log/rstudio-server /var/log/rstudio-sessions && \
 # 08: RStudio rserver.conf configuration
 #############################################
 COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
-
 RUN chown root:rstudio-users /etc/rstudio/rserver.conf && \
     chmod 640 /etc/rstudio/rserver.conf
 
