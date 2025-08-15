@@ -147,17 +147,13 @@ RUN chown root:rstudio-users /etc/rstudio/rserver.conf && \
 # 08: RStudio rsession.conf configuration (OPTIMIZED VERSION)
 ###############################################################
 COPY docker_parts/08_rsession.conf /etc/rstudio/rsession.conf
-
-##########################################
-# Set correct ownership and permissions
-##########################################
 RUN chown root:rstudio-users /etc/rstudio/rsession.conf && \
     chmod 640 /etc/rstudio/rsession.conf
 
 
 # 08: Post-installed packages for data science workflows
-COPY docker_parts/08_r_postinstall_packages.sh /tmp/docker_parts/08_r_postinstall_packages.sh
-RUN test -f /tmp/docker_parts/08_r_postinstall_packages.sh && chmod +x /tmp/docker_parts/08_r_postinstall_packages.sh && /tmp/docker_parts/08_r_postinstall_packages.sh 
+# COPY docker_parts/08_r_postinstall_packages.sh /tmp/docker_parts/08_r_postinstall_packages.sh
+# RUN test -f /tmp/docker_parts/08_r_postinstall_packages.sh && chmod +x /tmp/docker_parts/08_r_postinstall_packages.sh && /tmp/docker_parts/08_r_postinstall_packages.sh 
 
 ######################################################################
 # Ensure R environment variables are writable by all RStudio users
