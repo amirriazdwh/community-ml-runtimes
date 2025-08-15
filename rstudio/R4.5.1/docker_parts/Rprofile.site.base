@@ -37,6 +37,8 @@ tryCatch({
   if (file.exists(rstudio_config)) {
     source(rstudio_config)
   }
+  # Don't leak this helper variable into the user environment
+  rm(rstudio_config)
 }, error = function(e) {
   # Silently continue if no additional configs
 })

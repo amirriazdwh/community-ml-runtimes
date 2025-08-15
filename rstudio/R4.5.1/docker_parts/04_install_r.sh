@@ -85,7 +85,9 @@ chmod -R a+w /usr/local/lib/R/site-library
 mkdir -p /usr/local/lib/R/etc/profiles.d
 
 # Copy and process the base Rprofile.site configuration with variable substitution
-envsubst < /tmp/docker_parts/Rprofile.site.base > /usr/local/lib/R/etc/Rprofile.site
+# IMPORTANT: Only replace the literal ${CRAN} placeholder to avoid touching
+# R code tokens like R.version$platform / $arch / $os.
+perl -pe 's/\$\{CRAN\}/$ENV{CRAN}/g' < /tmp/docker_parts/Rprofile.site.base > /usr/local/lib/R/etc/Rprofile.site
 
 # Process and install the Renviron.site configuration from template
 envsubst < /tmp/docker_parts/Renviron.site.template > /usr/local/lib/R/etc/Renviron.site
