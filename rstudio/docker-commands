@@ -29,16 +29,42 @@ docker build \
   --progress=plain \
   -t peterableda/rstudio-cloudera-runtime:latest \
   .
-
-# Quick Rebuild (with cache)
-docker build -t peterableda/rstudio-cloudera-runtime:latest .
+#################################
+# Quick Rebuild (without cache)
+#################################
+docker build --no-cache -t optimized/rstudio-cloudera-runtime:latest .
 
 # Legacy R 4.4 build (not recommended)
-# docker build -t peterableda/rstudio-cloudera-runtime:2025.05-r4.4 .
+docker build -t optimized/rstudio-cloudera-runtime:latest .
 
 # ================================================================
 # 2. HIGH-PERFORMANCE CONTAINER DEPLOYMENT
 # ================================================================
+
+# ADIB testing commands
+docker run -d \
+  --network host \
+  --user root \
+  --name rstudio-optimized \
+  --hostname rstudio-optimized \
+  -p 8787:8787 \
+  --memory=55g \
+  --cpus="14" \
+  --ulimit nofile=65535:65535 \
+  --ulimit nproc=32768:32768 \
+  --ulimit memlock=-1:-1 \
+  --ulimit stack=67108864:67108864 \
+  --cap-add=SYS_NICE \
+  --cap-add=SYS_RESOURCE \
+  --security-opt seccomp=unconfined \
+  --env R_ENABLE_JIT=3 \
+  --env OMP_NUM_THREADS=14 \
+  --env OPENBLAS_NUM_THREADS=1 \
+  --env MKL_NUM_THREADS=1 \
+  --env ARROW_DEFAULT_MEMORY_POOL=system \
+  --env ARROW_USE_THREADING=true \
+  --restart unless-stopped \
+   optimized/rstudio-cloudera-runtime:latest
 
 # 🚀 PRODUCTION: Maximum Performance Optimized Container
 # All system optimizations, global configurations, multi-user ready

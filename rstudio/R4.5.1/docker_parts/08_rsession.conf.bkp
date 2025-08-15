@@ -14,7 +14,7 @@
 session-timeout-minutes=0
 
 # Disable session suspension for better performance in containers
-#session-suspensions-enabled=0
+session-suspensions-enabled=0
 
 # Faster session startup - don't load .Rprofile on resume   
 session-rprofile-on-resume-default=0
@@ -31,10 +31,10 @@ r-auto-reload-source=1
 # =============================================================================
 
 # R command line arguments with memory optimization
-#r-command-line-arguments=--no-save --no-restore --max-mem-size=20G --max-ppsize=500000
+r-command-line-arguments=--no-save --no-restore --max-mem-size=20G --max-ppsize=500000
 
 # Set larger memory thresholds before GC kicks in (20GB in bytes)
-#r-environ-R_MAX_MEM_SIZE=21474836480
+r-environ-R_MAX_MEM_SIZE=21474836480
 
 # =============================================================================
 # GARBAGE COLLECTION OPTIMIZATIONS
@@ -42,17 +42,17 @@ r-auto-reload-source=1
 # =============================================================================
 
 # Memory management for large datasets - disable verbose GC reports
-#r-gc-mem-reports=0
+r-gc-mem-reports=0
 
 # Memory growth strategy: triple memory on each GC (vs default double)
-#r-environ-R_GC_MEM_GROW=3
+r-environ-R_GC_MEM_GROW=3
 
 # Larger heap sizes for better performance with big data
-#r-environ-R_NSIZE=1000000      # Node heap size (default: 350000)
-#r-environ-R_VSIZE=33554432     # Vector heap size (default: 16777216)
+r-environ-R_NSIZE=1000000      # Node heap size (default: 350000)
+r-environ-R_VSIZE=33554432     # Vector heap size (default: 16777216)
 
 # Disable GC torture mode for production performance
-#r-environ-R_GCTORTURE=0
+r-environ-R_GCTORTURE=0
 
 # =============================================================================
 # PACKAGE MANAGEMENT AND REPOSITORIES
@@ -88,4 +88,4 @@ session-save-action-default=no
 restrict-directory-view=0
 
 # Show hidden files (useful for configuration files)
-#show-hidden-files=1
+show-hidden-files=1

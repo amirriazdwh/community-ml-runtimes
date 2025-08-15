@@ -16,22 +16,57 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MALLOC_ARENA_MAX=2 \
     OMP_NUM_THREADS=1 \
     R_MAX_VSIZE=8G \
-    LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8 \
     PATH="/usr/local/lib/R/bin:${PATH}"
 
+############################
+# setup system locally
+############################
+RUN apt-get update && \
+apt-get install -y --no-install-recommends locales && \
+locale-gen en_US.UTF-8 && \
+update-locale LANG=en_US.UTF-8 && \
+apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=en_US.UTF-8 \
+LANGUAGE=en_US:en \
+LC_ALL=en_US.UTF-8
+
+####################
+# setup apt-utils 
+####################
+RUN apt-get update && \
+apt-get install -y --no-install-recommends apt-utils && \
+rm -rf /var/lib/apt/lists/*
+
+##########################
 # 02: System Dependencies
+##########################
 COPY docker_parts/02_system_dependencies.sh /tmp/docker_parts/02_system_dependencies.sh
 RUN test -f /tmp/docker_parts/02_system_dependencies.sh && chmod +x /tmp/docker_parts/02_system_dependencies.sh && /tmp/docker_parts/02_system_dependencies.sh
 
 RUN apt-get update && apt-get install -y python3 python3-pip && \
     if [ ! -e /usr/bin/python ]; then ln -s /usr/bin/python3 /usr/bin/python; fi
 
+#########################################################################################
+# ensure full LaTeX support for building R packages with PDF vignettes and manuals
+#########################################################################################
+RUN apt-get install -y \
+    texlive-latex-base \
+    texlive-latex-recommended \
+    texlive-latex-extra \
+    texlive-fonts-extra \
+    texlive-font-utils \
+    texinfo \
+    ghostscript
+####################################
 # 03: Create cdsw User
+####################################
 COPY docker_parts/03_create_user.sh /tmp/docker_parts/03_create_user.sh
 RUN test -f /tmp/docker_parts/03_create_user.sh && chmod +x /tmp/docker_parts/03_create_user.sh && /tmp/docker_parts/03_create_user.sh
 
+############################
 # 04: Install R from source
+############################
 COPY docker_parts/04_install_r.sh /tmp/docker_parts/04_install_r.sh
 COPY docker_parts/Rprofile.site.base /tmp/docker_parts/Rprofile.site.base
 RUN test -f /tmp/docker_parts/04_install_r.sh && chmod +x /tmp/docker_parts/04_install_r.sh && /tmp/docker_parts/04_install_r.sh
@@ -40,20 +75,28 @@ RUN test -f /tmp/docker_parts/04_install_r.sh && chmod +x /tmp/docker_parts/04_i
 # COPY docker_parts/06_install_banking_packages.sh /tmp/docker_parts/06_install_banking_packages.sh
 # RUN test -f /tmp/docker_parts/06_install_banking_packages.sh && chmod +x /tmp/docker_parts/06_install_banking_packages.sh && /tmp/docker_parts/06_install_banking_packages.sh
 
+#############################################
 # Ensure R shared libraries are discoverable
+#############################################
 RUN echo "/usr/local/lib/R/lib" > /etc/ld.so.conf.d/R.conf && ldconfig
 
+############################################
 # 05: Global R options and memory tuning
+############################################
 COPY docker_parts/05_set_r_memory.sh /tmp/docker_parts/05_set_r_memory.sh
 RUN test -f /tmp/docker_parts/05_set_r_memory.sh && mv /tmp/docker_parts/05_set_r_memory.sh /etc/profile.d/set_r_memory.sh && chmod 755 /etc/profile.d/set_r_memory.sh
 
+########################################################
 # 07: RStudio server installation and configuration
+########################################################
 COPY docker_parts/07_rstudio_install.sh /tmp/docker_parts/07_rstudio_install.sh
 COPY docker_parts/rstudio-config.R /tmp/docker_parts/rstudio-config.R
-COPY docker_parts/config-handling.R /tmp/docker_parts/config-handling.R
+#COPY docker_parts/config-handling.R /tmp/docker_parts/config-handling.R
 RUN test -f /tmp/docker_parts/07_rstudio_install.sh && chmod +x /tmp/docker_parts/07_rstudio_install.sh && /tmp/docker_parts/07_rstudio_install.sh
 
+###########################################################################################
 # Create RStudio-specific log directories with proper permissions (after RStudio install)
+##########################################################################################
 RUN mkdir -p /var/log/rstudio-server /var/log/rstudio-sessions && \
     chown -R root:rstudio-users /var/log/rstudio-server /var/log/rstudio-sessions && \
     chmod -R 775 /var/log/rstudio-server /var/log/rstudio-sessions && \
@@ -61,30 +104,52 @@ RUN mkdir -p /var/log/rstudio-server /var/log/rstudio-sessions && \
     chown root:rstudio-users /var/log/r_profile_memory.log && \
     chmod 664 /var/log/r_profile_memory.log
 
+#############################################
 # 08: RStudio rserver.conf configuration
+#############################################
 COPY docker_parts/08_rserver.conf /etc/rstudio/rserver.conf
 
+RUN chown root:rstudio-users /etc/rstudio/rserver.conf && \
+    chmod 640 /etc/rstudio/rserver.conf
+
+###############################################################
 # 08: RStudio rsession.conf configuration (OPTIMIZED VERSION)
+###############################################################
 COPY docker_parts/08_rsession.conf /etc/rstudio/rsession.conf
+
+##########################################
+# Set correct ownership and permissions
+##########################################
+RUN chown root:rstudio-users /etc/rstudio/rsession.conf && \
+    chmod 640 /etc/rstudio/rsession.conf
+
 
 # 08: Post-installed packages
 # COPY docker_parts/08_r_postinstall_packages.sh /tmp/docker_parts/08_r_postinstall_packages.sh
 # RUN test -f /tmp/docker_parts/08_r_postinstall_packages.sh && chmod +x /tmp/docker_parts/08_r_postinstall_packages.sh && /tmp/docker_parts/08_r_postinstall_packages.sh 
 
+######################################################################
 # Ensure R environment variables are writable by all RStudio users
+######################################################################
 RUN touch /usr/local/lib/R/etc/Renviron.site && \
     chmod 664 /usr/local/lib/R/etc/Renviron.site && \
     chown root:rstudio-users /usr/local/lib/R/etc/Renviron.site
 
+#####################################
 # 09: RStudio startup script
+###################################
 COPY docker_parts/09_start_rstudio.sh /usr/local/bin/start_rstudio.sh
 RUN test -f /usr/local/bin/start_rstudio.sh && chmod +x /usr/local/bin/start_rstudio.sh
 
+############################################
 # Final cleanup to reduce image size
+############################################
 RUN apt-get clean \
     && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
 
+############################################
 # Healthcheck to ensure RStudio is running
+############################################
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s \
   CMD wget --quiet --tries=1 --spider http://localhost:8787/ || exit 1
 
@@ -108,7 +173,8 @@ LABEL \
     com.cloudera.ml.runtime.short-version=$ML_RUNTIME_SHORT_VERSION \
     com.cloudera.ml.runtime.maintenance-version=$ML_RUNTIME_MAINTENANCE_VERSION \
     com.cloudera.ml.runtime.git-hash=$ML_RUNTIME_GIT_HASH
-
+################################
 # Final container setup
+################################
 EXPOSE 8787
 CMD ["/usr/local/bin/start_rstudio.sh"]

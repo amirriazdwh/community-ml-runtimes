@@ -34,7 +34,8 @@ if [ ! -w /root/.config ]; then
     ln -sf /tmp/rstudio-config /root/.config-fallback
 fi
 
-# Note: Environment variables are now set in 04_install_r.sh Renviron.site at build time
+# Export environment variables for all users
+env | grep -v ^LD_LIBRARY_PATH >> /usr/local/lib/R/etc/Renviron.site
 
 # Start RStudio Server in multi-user mode
 echo "[INFO] Starting RStudio Server..."

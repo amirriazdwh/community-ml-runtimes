@@ -31,13 +31,12 @@ options(
 )
 
 # Load additional R profile configurations
-#tryCatch({
-# Source additional configurations from modular files
-#  config_files <- list.files("/usr/local/lib/R/etc/profiles.d/", pattern = "\\.R$", full.names = TRUE)
-#  for (file in config_files) {
-#    source(file)
-#  }
-#}, error = function(e) {
-#  # Silently continue if no additional configs
-#}
-)
+tryCatch({
+  # Source additional configurations from modular files
+  config_files <- list.files("/usr/local/lib/R/etc/profiles.d/", pattern = "\\.R$", full.names = TRUE)
+  for (file in config_files) {
+    source(file)
+  }
+}, error = function(e) {
+  # Silently continue if no additional configs
+})

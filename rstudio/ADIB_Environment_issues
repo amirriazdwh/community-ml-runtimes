@@ -1,0 +1,20 @@
+
+configure: WARNING: neither inconsolata.sty nor zi4.sty found: PDF vignettes and package manuals will not be rendered optimally
+
+
+configure: WARNING: C23 support is unavailable
+configure: WARNING: neither inconsolata.sty nor zi4.sty found: PDF vignettes and package manuals will not be rendered optimally
+configure: WARNING: --enable-R-static-lib conflicts with --enable-R-shlib and will be ignored
+debconf: delaying package configuration, since apt-utils is not installed
+
+
+
+strip: unable to copy file '/usr/lib/rstudio-server/bin/rserver'; reason: Text file busy
+
+
+*** Cannot find any Java interpreter
+*** Please make sure 'java' is on your PATH or set JAVA_HOME correspondingly
+make[1]: [Makefile:87: stamp-java] Error 1 (ignored)
+
+
+
