@@ -1,0 +1,48 @@
+## Renviron.site for RStudio Server
+## This file configures system-level environment variables for R
+
+## R core environment variables
+R_MAX_VSIZE=${R_MAX_VSIZE}
+R_MAX_NSIZE=${R_NSIZE:-1000000}
+LC_ALL=en_US.UTF-8
+LANG=en_US.UTF-8
+
+## Performance settings
+R_ENABLE_JIT=${R_ENABLE_JIT:-3}
+R_COMPILE_PKGS=${R_COMPILE_PKGS:-1}
+MALLOC_ARENA_MAX=${MALLOC_ARENA_MAX:-2}
+OMP_NUM_THREADS=${OMP_NUM_THREADS:-1}
+
+## Library paths
+R_LIBS_SITE=${R_HOME}/library
+R_LIBS_USER=${R_LIBS_USER}
+
+## Package-related settings
+R_DEFAULT_PACKAGES=datasets,utils,grDevices,graphics,stats,methods
+
+## Network and downloads
+R_DOWNLOAD_FILE_METHOD=libcurl
+R_TIMEOUT=300
+
+## System paths
+PAGER=/usr/bin/pager
+TAR=/bin/tar
+
+## External tools
+R_ZIPCMD=/usr/bin/zip
+R_UNZIPCMD=/usr/bin/unzip
+R_GZIPCMD=/bin/gzip
+R_LATEXCMD=/usr/bin/pdflatex
+R_MAKEINDEXCMD=/usr/bin/makeindex
+R_DVIPSCMD=/usr/bin/dvips
+
+## Java configuration
+JAVA_HOME=${JAVA_HOME}
+
+## Python integration
+RETICULATE_PYTHON=/usr/bin/python3
+
+## RStudio specific settings
+R_HISTSIZE=10000
+R_BROWSER=false
+R_PDFVIEWER=false

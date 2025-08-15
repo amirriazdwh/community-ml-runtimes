@@ -65,9 +65,10 @@ Rscript -e "webshot::install_phantomjs()" || echo "⚠️ PhantomJS installation
 # Note: Using system LaTeX instead of tinytex to avoid conflicts
 
 # Set bitmapType to 'cairo' for all R sessions (via modular config)
-cp /tmp/docker_parts/rstudio-config.R /usr/local/lib/R/etc/profiles.d
-chown -R root:rstudio-users /usr/local/lib/R/etc/profiles.d/rstudio-config.R
-chmod 640 /usr/local/lib/R/etc/profiles.d/rstudio-config.R
+mkdir -p /usr/local/lib/R/etc/profiles.d
+cp /tmp/docker_parts/rstudio-config.R /usr/local/lib/R/etc/profiles.d/
+chown root:rstudio-users /usr/local/lib/R/etc/profiles.d/rstudio-config.R
+chmod 644 /usr/local/lib/R/etc/profiles.d/rstudio-config.R
 
 # ===============================
 # === Create RStudio User Preferences (JSON Format for 2025.x) ===

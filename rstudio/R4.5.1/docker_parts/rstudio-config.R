@@ -1,5 +1,6 @@
 # RStudio Server specific configurations
-# This file is sourced by the main Rprofile.site
+# This file is loaded by Rprofile.site via the profiles.d mechanism
+# It contains RStudio-specific settings that should be separated from general R settings
 
 # Set bitmapType to 'cairo' for all R sessions (for graphics)
 options(bitmapType = 'cairo')

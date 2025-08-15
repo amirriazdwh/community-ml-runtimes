@@ -87,58 +87,8 @@ mkdir -p /usr/local/lib/R/etc/profiles.d
 # Copy and process the base Rprofile.site configuration with variable substitution
 envsubst < /tmp/docker_parts/Rprofile.site.base > /usr/local/lib/R/etc/Rprofile.site
 
-cat <<EOF > /usr/local/lib/R/etc/Renviron.site
-# R Version Information
-R_VERSION='${R_VERSION}'
-
-# Performance optimizations
-R_ENABLE_JIT=3
-R_COMPILE_PKGS=1
-
-# Memory and parallel processing (balanced settings)
-R_GC_MEM_GROW=3
-R_NSIZE=350000
-R_VSIZE=8000000
-
-# Library paths
-R_LIBS_USER='/usr/local/lib/R/site-library'
-R_LIBS_SITE='/usr/local/lib/R/site-library'
-
-# System paths (fixed PATH escaping)
-PATH="\${PATH}:/usr/local/bin"
-
-# Graphics and display (headless configuration with Cairo)
-R_BROWSER='false'
-R_PDFVIEWER='false'
-R_DEVICE='cairo'
-
-# Network and downloads
-R_DOWNLOAD_FILE_METHOD='libcurl'
-R_TIMEOUT=300
-R_ZIPCMD='/usr/bin/zip'
-R_UNZIPCMD='/usr/bin/unzip'
-
-# Python integration (for RStudio and reticulate)
-RETICULATE_PYTHON='/usr/bin/python3'
-
-# Config directory handling (for RStudio)
-R_USER_CONFIG_DIR='/tmp/r-config'
-RSTUDIO_CONFIG_HOME='/tmp/rstudio-config'
-
-# Additional R environment variables
-R_HISTSIZE=2000
-R_DEFAULT_PACKAGES='datasets,utils,grDevices,graphics,stats,methods'
-R_PROFILE_USER='/dev/null'
-
-# LaTeX and document processing
-R_LATEXCMD='/usr/bin/pdflatex'
-R_MAKEINDEXCMD='/usr/bin/makeindex'
-R_DVIPSCMD='/usr/bin/dvips'
-
-# Platform and architecture information
-R_PLATFORM='x86_64-pc-linux-gnu'
-R_ARCH=''
-EOF
+# Process and install the Renviron.site configuration from template
+envsubst < /tmp/docker_parts/Renviron.site.template > /usr/local/lib/R/etc/Renviron.site
 
 # Ensure correct ownership for multi-user setup (rstudio-users group)
 chown root:rstudio-users /usr/local/lib/R/etc/Renviron.site

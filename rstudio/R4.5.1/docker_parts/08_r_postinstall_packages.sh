@@ -28,48 +28,68 @@ apt-get update -qq && apt-get install -y \
   libicu-dev \
   libjpeg-dev \
   libpng-dev \
-  libtiff5-dev \
-  libreadline-dev \
-  libx11-dev \
-  libxt-dev \
-  libgl1-mesa-dev \
-  libglu1-mesa-dev \
-  libfreetype6-dev \
-  libharfbuzz-dev \
-  libfribidi-dev \
-  unixodbc-dev \
-  libpq-dev \
-  libmariadb-dev \
-  libmariadb-dev-compat \
-  libzstd-dev \
-  liblz4-dev \
-  libsnappy-dev \
-  libboost-all-dev \
-  libprotobuf-dev \
-  protobuf-compiler \
-  libutf8proc-dev \
-  libre2-dev \
-  libgoogle-glog-dev \
-  python3-dev \
-  python3-venv \
-  python3-pip \
-  libgomp1 \
-  libgsl-dev
+  libgit2-dev \
+  libssh2-1-dev \
+  liblzma-dev \
+  libpcre2-dev \
+  libsodium-dev \
+  libudunits2-dev \
+  libgdal-dev \
+  libhdf5-dev \
+  liblapack-dev \
+echo "📊 Installing data science packages..."
 
-echo "✅ System dependencies installed."
+# Function to install R packages with optimal flags for performance
+install_r_package() {
+  local pkg="$1"
+  echo "Installing $pkg..."
+  
+  R --quiet -e "options(warn = 2); \
+    install.packages('$pkg', \
+      repos = '$CRAN', \
+      dependencies = c('Depends', 'Imports', 'LinkingTo'), \
+      clean = TRUE, \
+      Ncpus = min(parallel::detectCores(), 4), \
+      verbose = FALSE)"
+}
 
-echo "🧪 Checking R graphics and system capabilities..."
-Rscript -e "cat('R capabilities:\n'); print(capabilities()); cat('\nSession Info:\n'); sessionInfo()"
+# Core data manipulation and visualization
+install_r_package "data.table"
+install_r_package "dplyr"
+install_r_package "tidyr"
+install_r_package "ggplot2"
+install_r_package "readr"
+install_r_package "vroom"
 
-Rscript -e "install.packages(c(
-  'readr', 'readxl',
-  'DBI', 'odbc', 'httr', 'jsonlite', 'curl', 'forcats', 'glue',
-  'fs', 'rlang', 'remotes', 'tibble'
-), repos = '${CRAN}', quiet = TRUE)"
+# Performance packages for large data
+install_r_package "arrow"
+install_r_package "fst"
+install_r_package "future"
+install_r_package "parallel"
+install_r_package "bit64"
 
-Rscript -e "options(repos = c(CRAN = '${CRAN}')); install.packages(c(
-  'knitr', 'bookdown', 'tinytex', 'quarto',
-  'renv', 'pak', 'digest', 'assertthat'
+# Markdown and reporting
+install_r_package "rmarkdown"
+install_r_package "knitr"
+
+# Database connections
+install_r_package "DBI"
+install_r_package "RSQLite"
+install_r_package "RPostgres"
+
+# Machine learning
+install_r_package "caret"
+install_r_package "randomForest"
+
+# Python integration
+install_r_package "reticulate"
+
+# Development tools
+install_r_package "devtools"
+install_r_package "testthat"
+install_r_package "roxygen2"
+
+echo "✅ R package installation completed!"
 ), quiet = TRUE)"
 
 Rscript -e 'if (!tinytex::is_tinytex()) message("System TeX Live is available, skipping TinyTeX install.")'
