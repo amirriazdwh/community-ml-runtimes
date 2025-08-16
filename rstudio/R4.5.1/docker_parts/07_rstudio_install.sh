@@ -135,63 +135,8 @@ fi
 PROFILE
 chmod +x /etc/profile.d/rstudio-defaults.sh
 
-echo "✅ Global RStudio preferences configured for all users"
 
-# ================================
-# === Python Configuration ===
-# ================================
-echo "🐍 Configuring Python integration..."
-
-# Note: Python environment variables are now set in 04_install_r.sh Renviron.site
-
-# # Create fallback config directories with proper permissions
-# mkdir -p /tmp/r-config /tmp/rstudio-config
-# chmod 777 /tmp/r-config /tmp/rstudio-config
-
-# # Add config directory handling to modular R profile system
-# cp /tmp/docker_parts/config-handling.R /usr/local/lib/R/etc/profiles.d
-
-# Ensure user directories have proper permissions for RStudio configuration
-echo "🔧 Setting up user directory permissions..."
-for user in cdsw dev1 dev2; do
-    # Ensure .config directory exists and has proper permissions
-    mkdir -p /home/$user/.config 2>/dev/null || true
-    chown $user:$user /home/$user/.config 2>/dev/null || true
-    chmod 755 /home/$user/.config 2>/dev/null || true
-    
-    # Ensure no root ownership issues in user directories
-    find /home/$user -user root -exec chown $user:$user {} \; 2>/dev/null || true
-done
-
-# Fix root config directory permission issue for RStudio Server
-echo "🔧 Fixing root config directory permissions for RStudio Server..."
-mkdir -p /root/.config 2>/dev/null || true
-chmod 755 /root/.config 2>/dev/null || true
-
-# Create a more robust startup script to handle runtime permission fixes
-cat > /usr/local/bin/fix-rstudio-permissions.sh << 'PERMFIX'
-#!/bin/bash
-# Runtime permission fixes for RStudio Server
-
-# Ensure root config directory exists and is writable
-mkdir -p /root/.config 2>/dev/null || true
-chmod 755 /root/.config 2>/dev/null || true
-
-# Ensure user config directories are properly set up
-for user in cdsw dev1 dev2; do
-    if [ -d "/home/$user" ]; then
-        mkdir -p /home/$user/.config 2>/dev/null || true
-        chown $user:$user /home/$user/.config 2>/dev/null || true
-        chmod 755 /home/$user/.config 2>/dev/null || true
-    fi
-done
-PERMFIX
-chmod +x /usr/local/bin/fix-rstudio-permissions.sh
-
-# Add permission fix to startup sequence
-echo '/usr/local/bin/fix-rstudio-permissions.sh' >> /usr/local/bin/start_rstudio.sh
-
-echo "✅ Python integration and user permissions configured"
+echo "✅ RStudio installation finalized (runtime perms handled on start)"
 
 # Cleanup cache and temp files (but preserve user homes during installation)
 rm -rf /tmp/* /var/tmp/* /root/.cache /var/lib/apt/lists/*

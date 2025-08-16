@@ -111,7 +111,7 @@ chown root:rstudio-users /usr/local/bin/Rscript
 ###############################################################################
 # 📦 Install Essential Graphics R Packages (no X11 required)
 ###############################################################################
-echo "📦 Installing R graphics packages..."
+echo "📦 Installing R graphics packages"
 Rscript -e "install.packages(c('Cairo', 'svglite', 'ragg', 'ggplot2', 'gridExtra', 'gridBase', 'tikzDevice'), repos=Sys.getenv('CRAN'), quiet=TRUE)"
 
 

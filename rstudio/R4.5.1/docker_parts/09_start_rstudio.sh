@@ -34,8 +34,10 @@ if [ ! -w /root/.config ]; then
     ln -sf /tmp/rstudio-config /root/.config-fallback
 fi
 
-# Export environment variables for all users
-env | grep -v ^LD_LIBRARY_PATH >> /usr/local/lib/R/etc/Renviron.site
+# Do NOT append the container environment into Renviron.site.
+# This can override HOME and other critical vars for user sessions (e.g., forcing HOME=/root in R),
+# leading to permission warnings like attempts to create /root/.config. We rely on the build-time
+# Renviron.site (generated from the template) and per-session environment provided by RStudio.
 
 # Start RStudio Server in multi-user mode
 echo "[INFO] Starting RStudio Server..."
